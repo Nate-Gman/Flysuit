@@ -4,10 +4,19 @@ This document explains *how the suit works* in the simulator: the three operatin
 modes, the layered architecture, every subsystem, and the physics that ties them
 together. For install/run/controls see [README.md](README.md).
 
-The whole model is one file, [flysuit.py](flysuit.py). It is organized top-to-
-bottom as: **`DIMS`** (the SI/mm specification — the single source of truth) →
-**system classes** → **`SuitState`** (owns and steps every subsystem each tick) →
-**`SuitPhysics`** (6-DOF integrator) → **renderers / HUD** → **`App`**.
+The model spans two files: [flysuit.py](flysuit.py) (~10,800 lines) contains the
+simulator core (specs, systems, physics, renderer, tests), and
+[showcase.py](showcase.py) (~1,500 lines) contains 15 detailed component
+showcases with 3D meshes, math proof, and true-scale specifications. The code is
+organized top-to-bottom as: **`DIMS`** (the SI/mm specification — the single
+source of truth) → **system classes** → **`SuitState`** (owns and steps every
+subsystem each tick) → **`SuitPhysics`** (6-DOF integrator) → **renderers / HUD**
+→ **`App`**.
+
+The suit's visual design is **angular and faceted** (MJOLNIR/Iron Man style),
+not round or blobby. Inner and middle layers use hexagonal cross-section torso
+and limb primitives (`_angular_torso`, `_angular_limb`), and outer armor plates
+are chamfered with visible gaps at joints for a sleek, forged appearance.
 
 ---
 
@@ -20,14 +29,16 @@ each frame from throttle, wings, and ambient density (`SuitState.flight_mode`).
 VTOL and cruise flight on 48 thrust-vectoring micro-turbofans burning Jet-A1
 fuel (SFC-modeled: 1.02 lb/(lbf·h) dry, 1.85 AB), with a 72 L conformal
 self-sealing bladder (~58 kg fuel). Thrust scales with air density (mass flow
-rate ρ/ρ₀), so at 28 k ft thrust drops to ~34% of sea-level. Deployable gliding
-wings provide silent range extension with proper induced drag (CDi = CL²/(π·AR·e),
-Oswald e = 0.85). A full combat suite includes Kalman-tracked auto-aim with
-ballistic firing solutions, a martial-arts defense AI, energy and tactical
-shields, a recon drone swarm, countermeasures, a non-lethal stun, and a grappling
-winch. Muscle fibers and the frame distribute g-loads so the pilot survives
-high-g maneuvers. Hover endurance is ~26 min at full dry thrust; climb-glide
-cycling extends this to 4–7 hours.
+rate ρ/ρ₀), so at 28 k ft thrust drops to ~34% of sea-level. Compact deployable
+gliding wings (3.5 m span, 22 ft², 12:1 glide) provide efficient range extension
+with proper induced drag (CDi = CL²/(π·AR·e), Oswald e = 0.85) — turbines
+maintain airspeed, wings provide lift. Wings stow flat against back armor. A
+full combat suite includes Kalman-tracked auto-aim with ballistic firing
+solutions, a martial-arts defense AI, energy and tactical shields, a recon drone
+swarm, countermeasures, a non-lethal stun, and a grappling winch. Muscle fibers
+and the frame distribute g-loads so the pilot survives high-g maneuvers. Hover
+endurance is ~26 min at full dry thrust; climb-glide cycling extends this to
+4–7 hours.
 
 ### 2. Space suit
 In vacuum the air-breathing turbines produce **zero** thrust — maneuvering falls
@@ -50,14 +61,17 @@ sealed helmet and hull are rated to 1,000 m.
 
 ## Layered armor architecture
 
-Four concentric layers, ~12 mm total, each a real material with real properties:
+Four concentric layers, **7.5 mm total** (6.9 mm materials + 0.6 mm gaps), each
+a real material with real properties. A 0.05 mm Faraday mesh is embedded within
+the middle layer. All layers use angular hexagonal cross-sections for a
+MJOLNIR/Iron Man aesthetic.
 
 | Layer | Thickness | Material | Function |
 |---|---|---|---|
-| Inner | 1.5 mm | spandex-nylon sensor suit | EEG/EMG sensing, comfort |
-| Middle | 5.0 mm | tripled DEA + STF muscle fibers | strength (15×), impact stiffening |
-| Intermediate | 2.5 mm | foam-filled auxetic metamaterial | energy densification |
-| Outer | 3.0 mm | graphene-UHMWPE panels (NIJ IV+) | ballistic + thermal + laser |
+| Inner | 0.8 mm | spandex-nylon sensor suit | EEG/EMG sensing, comfort |
+| Middle | 2.4 mm | tripled DEA + STF muscle fibers | strength (15×), impact stiffening |
+| Intermediate | 1.2 mm | foam-filled auxetic metamaterial | energy densification |
+| Outer | 2.5 mm | graphene-UHMWPE panels (NIJ IV+) | ballistic + thermal + laser |
 
 **Impact model (real ballistic limit).** A peak contact pressure propagates
 through the stack layer-by-layer: each layer defeats pressure up to a *stopping
@@ -65,7 +79,7 @@ capacity* derived from its material (plastic work / densification), and any exce
 penetrates while a small back-face-coupling fraction of the stopped pressure still
 transmits. The three layers sum to ~750 k PSI, so the suit **fully arrests up to a
 .50 BMG (~600 k PSI)** and is progressively **overmatched by 20 mm+ autocannon**.
-STF shear-stiffening and armor integrity feed back into the layer capacities, so
+STF shear-stickening and armor integrity feed back into the layer capacities, so
 absorption genuinely varies with threat, damage, and state — see `--impact-test`.
 
 ---
@@ -102,7 +116,8 @@ All of these are classes in `flysuit.py`, instantiated and stepped by `SuitState
 **Simulation core**
 - `SuitState` — the live state; `update(dt)` steps every subsystem in order.
 - `SuitPhysics` — 6-DOF translational + rotational integrator: thrust, drag, lift, gravity, buoyancy, wind, muscle assist, g-limiting; environment-aware (air / water / vacuum).
-- `Mesh` / `Part` / `SuitRenderer` / `FlightRenderer` / `App` — geometry, HUD, and the interactive shell.
+- `Mesh` / `Part` / `SuitRenderer` / `FlightRenderer` / `App` — geometry, HUD, and the interactive shell. The UI is fully responsive: all panels scale with window size via `pygame.VIDEORESIZE`, and help/instructions/showcase/info panels support mouse-wheel scrolling.
+- **Showcase system** (`showcase.py`) — 15 detailed component views: inner suit, middle layer, outer armor, turbine, helmet, DEA/STF/auxetic/graphene/UHMWPE/ceramic atomic-scale, CFRP frame, Archangel wings, power system, and neural BCI + AI co-pilot. Each includes 3D meshes, sub-components, math proof, and true-scale reference dots.
 
 ---
 
@@ -151,14 +166,15 @@ cosmetic:
 | Pilot range | 0.99–2.21 m (3′3″–7′3″), 29.5–190.5 kg (65–420 lb), telescoping |
 | Propulsion | 48 micro-turbofans, 68 lbf dry / 112 lbf AB, 180 k rpm, SFC 1.02/1.85 lb/(lbf·h) |
 | Fuel | 72 L Jet-A1 (~58 kg), conformal self-sealing bladder, ~26 min hover / 4–7 hr climb-glide |
-| Wings | 8.53 m span, 340 ft², 21:1 glide, induced drag CDi = CL²/(π·AR·e), e = 0.85 |
+| Wings | 3.5 m span, 22 ft² (2.0 m²), 12:1 glide, compact turbine-assisted, stows flat |
 | Power | 1,200 Wh solid-state Li-S (550 Wh/kg) + piezo/solar harvesting |
 | Thermal | ±100 °C, 12 kW heat / 3 kW cool, skin held ~37 °C |
 | Flight envelope | 420 mph, 28,000 ft ceiling, 5.8 h hover, 200 ft jump |
-| Armor | outer 600 k PSI (NIJ IV+), stack ballistic limit ~800 k PSI |
+| Armor | 7.5 mm total stack, outer 600 k PSI (NIJ IV+), stack ballistic limit ~750 k PSI |
 | Dive | 15 L BCD, 1,000 m rating, 6-compartment deco model, ppO₂ ≤ 1.6 ata |
 | Space | 12 g/cm² shielding, GCR ~0.66 mSv/day, 2 kg cold-gas RCS, 1,000 mSv career limit |
 | Environments | 11 presets: Earth SL → stratosphere, Mars, Titan, ocean 4 km, vacuum |
+| Showcases | 15 detailed component views with 3D meshes, math proof, and true-scale refs |
 
 ---
 
