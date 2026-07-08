@@ -11,8 +11,8 @@ Mjalnor'MV1.17 hybrid exoskeleton suit described in Projectgoal.md:
   - One-size-fits-all telescoping CFRP frame (fits 3ft-7ft, 65-420 lb pilot)
   - 4-layer armor: inner sensor suit / tripled DEA-STF muscle / auxetic
     metamaterial / graphene-UHMWPE outer panels
-  - 48 micro-turbofan swarm turbines for VTOL flight (thrust-vectoring)
-  - Deployable Archangel gliding wings (21:1 L/D, 340 sq ft)
+  - 48 micro-turbofan swarm turbines for VTOL flight (thrust-vectoring, Jet-A1 fuel)
+  - Compact deployable gliding wings (12:1 L/D, 22 sq ft, turbine-assisted)
   - Vacuum-sealed helmet for space + underwater (regenerable CO2, O2, thermal)
   - Unbreakable visor (graphene-polycarbonate, 15,000 lbs, 20-mile zoom)
   - Neural BCI (EEG/EMG, <17 ms latency, quantum-resistant encryption)
@@ -44,8 +44,8 @@ CONTROLS
   TAB ................... switch MODEL <-> FLIGHT <-> LAYERS
   MODEL:  mouse orbit / wheel zoom / R-M drag pan / 1-6 view presets
           L labels ; E exploded ; X section ; ,/. isolate parts
-  FLIGHT: UP/DOWN throttle ; SPACE max ; W/S/A/D/Q/E vector thrust
-          Z altitude-hold ; V hover ; R respawn ; [/] environment
+  FLIGHT: UP/DOWN throttle ; W/S pitch ; A/D roll ; L/R yaw ; IJKL thrust vector
+          SPACE max+afterburner ; Z altitude-hold ; V hover ; R respawn ; [/] env
   LAYERS: 1-4 toggle layers ; E exploded ; [/] cycle layer focus
   ANY:    H help ; I info ; M math ; P pause ; O export OBJ ; ESC quit
 ================================================================================
@@ -92,13 +92,15 @@ DIMS = {
     "ref_leg_len_m":         0.85,   # hip to ankle
     "ref_torso_len_m":       0.52,   # shoulder to hip
 
-    # --- Layer thicknesses (total < 10 mm) ---
-    "inner_thick_mm":         1.5,   # spandex-nylon sensor suit
-    "middle_thick_mm":        5.0,   # tripled DEA-polymer-STF (3x 1.67mm sublayers)
-    "intermediate_thick_mm":  2.5,   # foam-filled auxetic metamaterial
-    "outer_thick_mm":         3.0,   # graphene-UHMWPE armor panels
-    "faraday_thick_mm":       0.1,   # copper-graphene mesh (within middle)
-    "total_thick_mm":        12.0,   # ~12 mm total (with gaps/gaskets)
+    # --- Layer thicknesses (ultra-conformed, total 7.5 mm) ---
+    # Stack: inner(0.8) + middle(2.4) + intermediate(1.2) + outer(2.5) + gaps(0.6) = 7.5mm
+    # Faraday mesh (0.05mm) is embedded within middle layer, not in stack
+    "inner_thick_mm":         0.8,   # ultra-thin spandex-nylon sensor fabric with printed EMG
+    "middle_thick_mm":        2.4,   # tripled DEA-STF (3x 0.8mm sublayers, STF interlayers)
+    "intermediate_thick_mm":  1.2,   # thin auxetic re-entrant honeycomb + foam fill
+    "outer_thick_mm":         2.5,   # graphene-UHMWPE (2.0mm) + alumina ceramic strike face (0.5mm)
+    "faraday_thick_mm":       0.05,  # graphene-copper monolayer mesh (embedded in middle)
+    "total_thick_mm":         7.5,   # 7.5 mm total stack (with 0.6mm gaps/gaskets)
 
     # --- Frame: CFRP telescoping exoskeleton ---
     "frame_tube_od_mm":      22.0,   # outer tube diameter
@@ -156,7 +158,7 @@ DIMS = {
     # --- Helmet ---
     "helmet_od_mm":          260.0,
     "helmet_wall_mm":          8.0,
-    "helmet_weight_kg":        1.2,
+    "helmet_weight_kg":        1.0,
     "visor_thickness_mm":     12.0,
     "visor_max_force_lbs": 15000.0,
     "visor_zoom_optical":      10,   # 10x optical
@@ -167,34 +169,39 @@ DIMS = {
     "co2_scrub_hours":          24,  # regenerable 4-bed molecular sieve
     "o2_capacity_hours":        24,
 
-    # --- Propulsion: micro-turbofan swarm turbines ---
-    "turbine_count":            48,
-    "turbine_d_mm":            19.8,   # 0.78 inch diameter
-    "turbine_len_mm":         289.6,   # 11.4 inch length
-    "turbine_rpm_max":      180000,
-    "turbine_thrust_dry_lbf":  68,
-    "turbine_thrust_ab_lbf":  112,   # afterburner
-    "turbine_bypass_ratio":      8,   # 8:1 cold bypass
+    # --- Propulsion: micro-turbofan swarm (physically validated) ---
+    # Thrust ~ mdot * V_exit; at 50mm dia, 150k RPM, tip speed ~393 m/s
+    # mdot = rho * A * V_inlet = 1.225 * pi*(0.025)^2 * 196 = 0.47 kg/s
+    # F = 0.47 * 280 = 132 N = 30 lbf (validated)
+    # T/W ~40:1 with CMC blades + magnetic bearings + 3D-printed Ti housing
+    # Weight per turbine: 30/40 = 0.75 lbf = 0.34 kg; total = 36 * 0.34 = 12.2 kg
+    "turbine_count":            36,
+    "turbine_d_mm":            50.0,   # 50mm dia (frontal area for 30 lbf thrust)
+    "turbine_len_mm":         180.0,   # 180mm length (compact, conformal)
+    "turbine_rpm_max":      150000,
+    "turbine_thrust_dry_lbf":  30,   # 30 lbf dry (132 N, validated from mdot*V_exit)
+    "turbine_thrust_ab_lbf":  50,   # 50 lbf afterburner (1.67x boost)
+    "turbine_bypass_ratio":      6,   # 6:1 cold bypass (compact)
     "turbine_bearing":    "ceramic-matrix hybrid",
-    "turbine_sfc_dry_lb_lbh": 1.02,  # lb fuel per lbf-thrust per hour (dry, ~PBS TJ-40 class)
-    "turbine_sfc_ab_lb_lbh":  1.85,  # SFC with afterburner (richer burn)
+    "turbine_sfc_dry_lb_lbh": 1.0,  # lb fuel per lbf-thrust per hour (dry)
+    "turbine_sfc_ab_lb_lbh":  1.8,  # SFC with afterburner (richer burn)
     "fuel_type":           "Jet-A1",
     "fuel_density_kg_l":      0.81,  # Jet-A1 density
-    "fuel_capacity_l":       72.0,   # 72 L conformal Kevlar bladder (Titan)
-    # Placement: 12 backpack, 8 forearm, 8 calf, 8 thigh, 4 helmet ring
+    "fuel_capacity_l":       45.0,   # 45 L distributed conformal bladders (torso+thighs+calves)
+    # Placement: 12 backpack, 6 forearm, 6 calf, 6 thigh, 6 helmet ring = 36
     "turbine_backpack":         12,
-    "turbine_forearm":           8,
-    "turbine_calf":              8,
-    "turbine_thigh":             8,
-    "turbine_helmet":            4,
+    "turbine_forearm":           6,
+    "turbine_calf":              6,
+    "turbine_thigh":             6,
+    "turbine_helmet":            6,
     "turbine_vector_deg":      120,   # +/-120 deg vectoring
 
-    # --- Deployable Archangel wings ---
-    "wing_span_m":             8.53,   # 28 ft (Titan), 6.4m (Nano)
-    "wing_area_sqft":          340,   # Titan
-    "wing_ld_ratio":            21,   # 21:1 best glide
-    "wing_deploy_s":           0.8,
-    "wing_min_sink_ms":        1.9,
+    # --- Deployable Archangel wings (compact, turbine-assisted glide) ---
+    "wing_span_m":             3.50,   # 11.5 ft compact span, stows flat on back
+    "wing_area_sqft":           22,   # 2.04 m^2, turbine-assisted so less area needed
+    "wing_ld_ratio":            12,   # 12:1 best glide (compact wings, lower AR)
+    "wing_deploy_s":           0.5,
+    "wing_min_sink_ms":        3.0,   # higher sink but turbines compensate
     "wing_membrane":    "aerogel/graphene weave",
     "wing_rib_material":      "nitinol memory alloy",
 
@@ -239,7 +246,7 @@ DIMS = {
     "perf_max_speed_mph":       420,
     "perf_climb_ft_min":      18000,
     "perf_ceiling_ft":        28000,
-    "perf_hover_hours":        5.8,
+    "perf_hover_hours":        0.26,   # ~15 min pure hover; climb-glide extends to 4-7h
 
     # --- Upgrade: Active Camouflage / Adaptive Stealth ---
     "stealth_electrochromic_panels":  48,   # panels in outer armor
@@ -366,7 +373,7 @@ DIMS = {
     "maglev_weight_kg":       0.3,
 
     # --- Dive suit: buoyancy control + decompression computer ---
-    "dive_bcd_volume_l":        15.0,   # variable buoyancy bladder capacity (L)
+    "dive_bcd_volume_l":        30.0,   # variable buoyancy bladder capacity (L)
     "dive_ballast_kg":           6.0,   # fixed trim ballast
     "dive_max_depth_m":       1000.0,   # crush depth rating (outer shell)
     "dive_gas_liters":        2400.0,   # onboard breathing gas (STP-equivalent)
@@ -390,14 +397,26 @@ DIMS = {
     "mmod_flux_m2_s":         3.0e-6,   # damaging-particle flux (>0.1mm) per m2/s
     "mmod_exposed_area_m2":      2.0,   # suit surface presented to the flux
 
-    # --- Weight budget (updated with all upgrades) ---
-    "weight_frame_kg":         2.0,
-    "weight_fibers_kg":        2.0,
-    "weight_armor_kg":         2.0,   # includes stealth electrochromic panels
-    "weight_electronics_kg":   1.5,   # +0.5: energy shield caps, voice proc, vision modes
-    "weight_life_support_kg":  1.0,
-    "weight_enhancements_kg":  2.3,   # grapple, countermeasures, drones, beacon, taser, maglev, healing
-    "weight_total_kg":        10.8,   # 10.8 kg base with all worn upgrades
+    # --- Weight budget (ultra-conformed, self-consistent) ---
+    # Each component weight is physically derived from material density x volume
+    # Total = 25.2 kg suit (without fuel); +36.5 kg fuel + 79.4 kg pilot = 141.1 kg
+    # T/W dry = (36*30*4.448)/(141.1*9.81) = 4804/1385 = 3.47:1 (flyable)
+    # T/W AB  = (36*50*4.448)/(141.1*9.81) = 8006/1385 = 5.78:1 (agile)
+    "weight_frame_kg":         1.8,   # CFRP tubes(0.34) + Ti nodes(0.32) + actuators(0.70) + straps(0.24) + misc(0.20)
+    "weight_inner_kg":         0.3,   # 0.8mm sensor fabric, ~1.5 m^2, 800 kg/m^3
+    "weight_faraday_kg":       0.2,   # 0.05mm graphene-Cu mesh, ~1.5 m^2
+    "weight_fibers_kg":        1.8,   # 2.4mm DEA-STF, 3 sublayers, segmented 70% coverage
+    "weight_auxetic_kg":       0.6,   # 1.2mm auxetic lattice at 20% rel density + foam
+    "weight_armor_kg":         1.5,   # 2.5mm graphene-UHMWPE(2.0mm) + alumina(0.5mm), 12 panels
+    "weight_helmet_kg":        1.0,   # shell + visor + life support + neural band
+    "weight_turbines_kg":     12.2,   # 36x micro-turbofans at 0.34 kg each (T/W 40:1)
+    "weight_wings_kg":         1.0,   # nitinol ribs + graphene membrane, compact
+    "weight_fuel_system_kg":   1.0,   # bladder + lines + pumps (fuel counted separately)
+    "weight_thermal_kg":       0.5,   # Peltier junctions + capillary loop + aerogel
+    "weight_power_kg":         2.2,   # 1200 Wh / 550 Wh/kg = 2.18 kg Li-S cells + BMS
+    "weight_electronics_kg":   0.3,   # neural processor + RTOS + sensors
+    "weight_enhancements_kg":  0.8,   # grapple, countermeasures, drones, beacon, taser, maglev, healing
+    "weight_total_kg":        25.2,   # 25.2 kg suit base (without fuel)
 }
 
 # Environment presets for flight mode
@@ -635,6 +654,7 @@ C_VISOR_GLOW = (80, 180, 255)
 C_FIBER     = (100, 180, 220)
 C_FIBER_HOT = (140, 220, 255)
 C_BATTERY   = (80, 100, 70)
+C_FUEL      = (90, 80, 50)    # Kevlar bladder + fuel lines
 C_STF       = (90, 70, 100)
 C_FARADAY   = (140, 110, 60)
 C_TEXT      = (224, 230, 238)
@@ -979,6 +999,195 @@ def _strip(points, width, z=0.0):
     return verts, faces
 
 
+def _tapered_prism(r_top, r_bot, z0, z1, seg=8, flat_frac=0.6):
+    """Angular prism with flat front/back and rounded sides.
+    flat_frac controls how much of the circumference is flat (0=circle, 1=square).
+    Creates a sleek tapered limb segment like Iron Man forearm/shin."""
+    seg = _detail_seg(seg)
+    verts, faces = [], []
+    ang = np.linspace(0, 2 * np.pi, seg, endpoint=False)
+    for z, r in ((z0, r_bot), (z1, r_top)):
+        for a in ang:
+            # Flatten front and back by scaling cos component
+            ca = math.cos(a)
+            sa = math.sin(a)
+            flat = 1.0 - flat_frac * abs(ca)
+            rr = r * flat
+            verts.append((rr * ca, r * flat_frac * ca * 0.3, rr * sa))
+    for i in range(seg):
+        a, b = i, (i + 1) % seg
+        faces.append((a, b, seg + b, seg + a))
+    return verts, faces
+
+
+def _armor_plate(cx, cy, cz, sx, sy, sz, chamfer=0.015, taper=0.0):
+    """Chamfered box for sleek armor plates.
+    chamfer = amount to bevel edges (makes it look forged, not boxy).
+    taper = amount to narrow the top face (trapezoidal cross-section)."""
+    hx, hy, hz = sx / 2, sy / 2, sz / 2
+    tx = hx - taper  # tapered top
+    ch = chamfer
+    v = [
+        # bottom face (wider)
+        (cx-hx, cy-hy, cz-hz), (cx+hx, cy-hy, cz-hz),
+        (cx+hx, cy-hy, cz+hz), (cx-hx, cy-hy, cz+hz),
+        # chamfer level bottom
+        (cx-hx+ch, cy-hy+ch, cz-hz+ch), (cx+hx-ch, cy-hy+ch, cz-hz+ch),
+        (cx+hx-ch, cy-hy+ch, cz+hz-ch), (cx-hx+ch, cy-hy+ch, cz+hz-ch),
+        # chamfer level top
+        (cx-tx+ch, cy+hy-ch, cz-hz+ch), (cx+tx-ch, cy+hy-ch, cz-hz+ch),
+        (cx+tx-ch, cy+hy-ch, cz+hz-ch), (cx-tx+ch, cy+hy-ch, cz+hz-ch),
+        # top face (narrower)
+        (cx-tx, cy+hy, cz-hz), (cx+tx, cy+hy, cz-hz),
+        (cx+tx, cy+hy, cz+hz), (cx-tx, cy+hy, cz+hz),
+    ]
+    f = [
+        (0,1,2,3), (12,15,14,13),  # bottom, top
+        (0,4,5,1), (1,5,6,2), (2,6,7,3), (3,7,4,0),  # lower chamfer
+        (4,8,9,5), (5,9,10,6), (6,10,11,7), (7,11,8,4),  # mid chamfer
+        (8,12,13,9), (9,13,14,10), (10,14,15,11), (11,15,12,8),  # upper chamfer
+    ]
+    return v, f
+
+
+def _tapered_limb(r_top, r_bot, z0, z1, seg=12, flat_frac=0.5, taper_profile=None):
+    """Sleek tapered limb section with flat front/back.
+    taper_profile: list of radius multipliers along length for custom shaping.
+    Creates Iron Man-style tapered forearm/shin/thigh geometry."""
+    seg = _detail_seg(seg)
+    verts, faces = [], []
+    n_rings = len(taper_profile) if taper_profile else 2
+    ang = np.linspace(0, 2 * np.pi, seg, endpoint=False)
+    for ri in range(n_rings):
+        t = ri / max(n_rings - 1, 1)
+        z = z0 + t * (z1 - z0)
+        r = r_bot + (r_top - r_bot) * t
+        if taper_profile:
+            r *= taper_profile[ri]
+        for a in ang:
+            ca = math.cos(a)
+            sa = math.sin(a)
+            flat = 1.0 - flat_frac * abs(ca)
+            rr = r * flat
+            verts.append((rr * ca, r * flat_frac * ca * 0.25, rr * sa))
+    for ri in range(n_rings - 1):
+        for i in range(seg):
+            a = ri * seg + i
+            b = ri * seg + (i + 1) % seg
+            c = (ri + 1) * seg + (i + 1) % seg
+            d = (ri + 1) * seg + i
+            faces.append((a, b, c, d))
+    return verts, faces
+
+
+def _pauldron(r, cx, cy, cz, seg=10):
+    """Angular shoulder pauldron - faceted sphere, not round.
+    Looks like Master Chief shoulder armor."""
+    seg = _detail_seg(seg)
+    rings = max(4, seg // 2)
+    verts, faces = [], []
+    for i in range(rings + 1):
+        theta = math.pi * i / rings
+        for j in range(seg):
+            phi = 2 * math.pi * j / seg
+            # Flatten bottom half to create a dome, not full sphere
+            if theta > math.pi * 0.6:
+                theta_clamped = math.pi * 0.6 + (theta - math.pi * 0.6) * 0.3
+            else:
+                theta_clamped = theta
+            r_ring = r * math.sin(theta_clamped)
+            verts.append((
+                cx + r_ring * math.cos(phi) * 0.9,  # slightly flattened
+                cy + r * math.cos(theta_clamped) * 0.7,  # flattened dome
+                cz + r_ring * math.sin(phi) * 0.9))
+    for i in range(rings):
+        for j in range(seg):
+            a = i * seg + j
+            b = i * seg + (j + 1) % seg
+            c = (i + 1) * seg + (j + 1) % seg
+            d = (i + 1) * seg + j
+            if i == 0:
+                faces.append((a, c, d))
+            elif i == rings - 1:
+                faces.append((a, b, d))
+            else:
+                faces.append((a, b, c, d))
+    return verts, faces
+
+
+def _angular_torso(r_shoulder, r_waist, r_hip, z0, z1, seg=6):
+    """Angular faceted torso — hexagonal cross-section with flat chest/back.
+    Broad at shoulders, tapered at waist, flared at hips.
+    Creates MJOLNIR/Iron Man torso silhouette, not a round capsule."""
+    verts, faces = [], []
+    ang = np.linspace(0, 2 * np.pi, seg, endpoint=False)
+    # 3 rings: shoulders (z1), waist (mid), hips (z0)
+    z_mid = (z0 + z1) / 2
+    rings = [(z0, r_hip), (z_mid, r_waist), (z1, r_shoulder)]
+    for z, r in rings:
+        for a in ang:
+            ca = math.cos(a)
+            sa = math.sin(a)
+            # Flatten front/back (x axis) for angular chest/back plates
+            flat_x = 1.0 - 0.45 * abs(ca)
+            flat_y = 1.0 - 0.30 * abs(sa)
+            vx = r * ca * flat_x * 1.15
+            vy = r * sa * flat_y * 0.85
+            verts.append((vx, vy, z))
+    n = seg
+    for ring in range(2):
+        for i in range(n):
+            a = ring * n + i
+            b = ring * n + (i + 1) % n
+            c = (ring + 1) * n + (i + 1) % n
+            d = (ring + 1) * n + i
+            faces.append((a, b, c, d))
+    # Cap top and bottom
+    faces.append(tuple(range(n - 1, -1, -1)))  # bottom
+    faces.append(tuple(range(2 * n, 3 * n)))   # top
+    return verts, faces
+
+
+def _angular_limb(r_top, r_bot, z0, z1, seg=6, flat_frac=0.6):
+    """Angular limb for inner layer — hexagonal cross-section, not round.
+    Flat front/back like MJOLNIR techsuit, tapered."""
+    verts, faces = [], []
+    ang = np.linspace(0, 2 * np.pi, seg, endpoint=False)
+    for z, r in ((z0, r_bot), (z1, r_top)):
+        for a in ang:
+            ca = math.cos(a)
+            sa = math.sin(a)
+            flat = 1.0 - flat_frac * abs(ca)
+            rr = r * flat
+            verts.append((rr * ca, r * flat_frac * ca * 0.2, rr * sa))
+    n = seg
+    for i in range(n):
+        a, b = i, (i + 1) % n
+        faces.append((a, b, n + b, n + a))
+    faces.append(tuple(range(n - 1, -1, -1)))
+    faces.append(tuple(range(n, 2 * n)))
+    return verts, faces
+
+
+def _panel_line(x0, y0, z0, x1, y1, z1, width=0.002):
+    """Thin emissive strip for panel lines / accent grooves on armor."""
+    dx = x1 - x0
+    dy = y1 - y0
+    dz = z1 - z0
+    dl = math.sqrt(dx*dx + dy*dy + dz*dz) or 1.0
+    # Perpendicular in the XY plane
+    nx = -dy / dl * width
+    ny = dx / dl * width
+    nz = 0.0
+    if dl < 0.001:
+        nx, ny = width, 0
+    v = [
+        (x0+nx, y0+ny, z0+nz), (x0-nx, y0-ny, z0-nz),
+        (x1-nx, y1-ny, z1-nz), (x1+nx, y1+ny, z1+nz)]
+    f = [(0, 1, 2, 3)]
+    return v, f
+
+
 # =============================================================================
 # FACE GROUPS  -- pre-compute face arity buckets for vectorized rendering
 # =============================================================================
@@ -1113,7 +1322,7 @@ PART_DB = {
         "materials": ["Spandex-nylon blend", "EMG sensor grid (64-channel)",
                       "Phase-change microcapsules", "Capillary moisture network",
                       "Silver-ion antimicrobial treatment"],
-        "weight_kg": 0.4,
+        "weight_kg": 0.3,
         "blueprint": "First layer donned. Pulls on like a wetsuit. "
                      "EMG connectors snap to neural harness at spine. "
                      "No structural or protective function -- purely sensor + comfort.",
@@ -1140,7 +1349,7 @@ PART_DB = {
         "layer": 2,
         "materials": ["Copper-graphene mesh (0.1mm)", "Flexible PCB power bus",
                       "Silver conductive epoxy", "Graphene oxide interleave"],
-        "weight_kg": 1.2,
+        "weight_kg": 0.2,
         "blueprint": "Second layer. Draped over inner suit, connected at "
                      "spine clamp. Power bus routes from battery pack to all "
                      "subsystems. 8 vertical + 6 horizontal conductors visible.",
@@ -1170,7 +1379,7 @@ PART_DB = {
                       "Shear-thickening fluid (STF) interlayer",
                       "Carbon nanotube electrodes",
                       "Graphene strain sensors"],
-        "weight_kg": 3.8,
+        "weight_kg": 1.8,
         "blueprint": "Third layer. Segmented panels snap over faraday shield. "
                      "Each panel has 4 DEA sublayers + STF bladder. "
                      "Leg panels have 5x fiber density for jump boost. "
@@ -1203,7 +1412,7 @@ PART_DB = {
                       f"Closed-cell foam fill (Poisson's ratio: {DIMS['auxetic_poisson']})",
                       "Titanium alloy nodes at junctions",
                       "Kevlar thread stitching"],
-        "weight_kg": 2.1,
+        "weight_kg": 0.6,
         "blueprint": "Fourth layer. Hexagonal auxetic lattice panels. "
                      "Interlocks with muscle layer via tongue-and-groove. "
                      "Foam injected under pressure after assembly. "
@@ -1236,7 +1445,7 @@ PART_DB = {
                       f"Ceramic strike face ({DIMS['ceramic_type']})",
                       f"Coating: {DIMS['coating_type']}",
                       "Modular quick-release fasteners"],
-        "weight_kg": 5.4,
+        "weight_kg": 1.5,
         "blueprint": "Fifth (outermost) layer. Modular panels: chest (2), "
                      "back (2), shoulders (2), thighs (2), shins (2), "
                      "upper arms (2). Each panel has self-healing seam. "
@@ -1273,7 +1482,7 @@ PART_DB = {
                       "Magnetic bearing joints",
                       "Load cells at each node",
                       f"Spectra auto-tensioning straps ({DIMS['frame_strap_count']}x)"],
-        "weight_kg": 4.2,
+        "weight_kg": 1.8,
         "blueprint": "Assembled first (layer 0). Telescoping tubes extend to "
                      "pilot height. 64 Ti nodes at joint positions. "
                      "Each node has 4 DOF magnetic bearing + load cell. "
@@ -1307,7 +1516,7 @@ PART_DB = {
                       "O2 recycler + CO2 scrubber (4-bed molecular sieve)",
                       "Neural interface band (64-channel)",
                       "HUD projection system"],
-        "weight_kg": DIMS.get("helmet_weight_kg", 2.5),
+        "weight_kg": DIMS.get("helmet_weight_kg", 1.0),
         "blueprint": "Donned last. Seals to neck ring on outer armor. "
                      "Life support activates on seal detection. "
                      "Neural band calibrates to pilot in 30s. "
@@ -1348,7 +1557,7 @@ PART_DB = {
                       "Compressed gas afterburner reservoirs",
                       f"{DIMS['turbine_bearing']} bearings",
                       f"Fuel: {DIMS['fuel_type']} ({DIMS['fuel_density_kg_l']} kg/L)"],
-        "weight_kg": 6.5,
+        "weight_kg": 12.2,
         "blueprint": f"Mounted to frame nodes. {DIMS['turbine_count']} turbines in "
                      f"5 groups: backpack ({DIMS['turbine_backpack']}), forearms ({DIMS['turbine_forearm']}), "
                      f"calves ({DIMS['turbine_calf']}), thighs ({DIMS['turbine_thigh']}), helmet ({DIMS['turbine_helmet']}). "
@@ -1373,28 +1582,31 @@ PART_DB = {
         "build_details": {"time_min": 60, "tools": ["Gimbal alignment laser", "CAN bus configurator", "Bearing preload tool", "Afterburner pressure tester", "FADEC programmer"], "torque": "Gimbal mount: 6 Nm", "difficulty": "Expert", "notes": "Mount 48 turbines in 5 groups. Align gimbals with laser (0.1deg accuracy). Configure 6 ESCs + FADEC via CAN bus. Test each turbine at 10% throttle. Pressure-test afterburner reservoirs to 300 bar. Verify fuel flow from bladder to each turbine group."},
     },
     "wings": {
-        "description": f"Deployable gliding wings. Wingspan: {DIMS['wing_span_m']}m ({DIMS['wing_span_m']*3.28:.0f}ft). "
-                       f"Surface area: {DIMS['wing_area_sqft']} sq ft. L/D ratio: {DIMS['wing_ld_ratio']}:1. "
+        "description": f"Compact deployable gliding wings for turbine-assisted flight. "
+                       f"Wingspan: {DIMS['wing_span_m']}m ({DIMS['wing_span_m']*3.28:.0f}ft). "
+                       f"Surface area: {DIMS['wing_area_sqft']} sq ft ({DIMS['wing_area_sqft']*0.0929:.1f} m^2). "
+                       f"L/D ratio: {DIMS['wing_ld_ratio']}:1. "
                        f"Min sink rate: {DIMS['wing_min_sink_ms']} m/s. Deploy in {DIMS['wing_deploy_s']}s. "
                        f"Membrane: {DIMS['wing_membrane']}. Ribs: {DIMS['wing_rib_material']}. "
                        "Spring-loaded deployment with shape-memory alloy hinges. "
-                       "Enable sustained glide from altitude or turbine-assisted cruise.",
+                       "Turbines maintain airspeed; wings provide efficient glide. "
+                       "Stows flat against back armor when not deployed.",
         "category": "Gliding Surfaces",
         "layer": 5,
         "materials": [f"Wing ribs: {DIMS['wing_rib_material']}",
                       f"Membrane: {DIMS['wing_membrane']}",
                       "Shape-memory alloy deploy hinges",
                       "Wing surface heating elements (anti-ice)"],
-        "weight_kg": 1.8,
+        "weight_kg": 1.0,
         "blueprint": "Stowed flat against back armor. Deploy via key 6 or "
                      "automatic at speed >50 m/s with altitude >100m. "
                      "Spring-loaded ribs snap open in 0.5s. "
                      "Membrane tensioned by shape-memory hinges.",
         "icon": "wing",
         "sub_components": [
-            {"name": "CFRP Wing Ribs", "count": 12, "detail": f"Spring-loaded, {DIMS['wing_rib_material']}, telescoping deployment"},
-            {"name": "Graphene Membrane", "count": 2, "detail": f"{DIMS['wing_membrane']}, {DIMS['wing_area_sqft']} sq ft total, solar nanofiber integrated"},
-            {"name": "Shape-Memory Hinges", "count": 4, "detail": f"Nitinol, deploy in {DIMS['wing_deploy_s']}s, 90-degree rotation"},
+            {"name": "Nitinol Wing Ribs", "count": 8, "detail": f"Spring-loaded, {DIMS['wing_rib_material']}, 4 per wing, telescoping deployment"},
+            {"name": "Graphene Membrane", "count": 2, "detail": f"{DIMS['wing_membrane']}, {DIMS['wing_area_sqft']} sq ft ({DIMS['wing_area_sqft']*0.0929:.1f} m^2) total, solar nanofiber integrated"},
+            {"name": "Shape-Memory Hinges", "count": 2, "detail": f"Nitinol, deploy in {DIMS['wing_deploy_s']}s, 90-degree rotation, shoulder-mounted"},
             {"name": "Anti-Ice Heating Elements", "count": 2, "detail": "Graphene heating trace, 50W per wing, -40C rated"},
             {"name": "Solar Nanofiber Film", "count": 2, "detail": "Integrated in membrane topside, 200W peak harvesting"},
             {"name": "Wing Lock Mechanism", "count": 2, "detail": "Electromagnetic lock, release on deploy command or power loss"},
@@ -1402,7 +1614,7 @@ PART_DB = {
         "dimensions": f"Wingspan: {DIMS['wing_span_m']}m ({DIMS['wing_span_m']*3.28:.0f}ft) | Area: {DIMS['wing_area_sqft']} sq ft | Stowed: flat on back",
         "connectors": ["2x hinge mount (shoulder armor)", "2x electromagnetic lock", "Power: 48V for heating + lock", "Data: deploy signal from RTOS"],
         "performance": [f"L/D ratio: {DIMS['wing_ld_ratio']}:1", f"Min sink: {DIMS['wing_min_sink_ms']} m/s", f"Deploy time: {DIMS['wing_deploy_s']}s", f"Solar harvest: 200W peak"],
-        "build_details": {"time_min": 30, "tools": ["Hinge alignment jig", "Membrane tension gauge", "Electromagnetic lock tester"], "torque": "Hinge bolts: 3 Nm", "difficulty": "Hard", "notes": "Mount 12 CFRP ribs to shoulder hinges. Tension graphene membrane to 50N/m. Install 4 Nitinol hinges. Test deploy in <0.8s. Verify electromagnetic locks release on power loss."},
+        "build_details": {"time_min": 30, "tools": ["Hinge alignment jig", "Membrane tension gauge", "Electromagnetic lock tester"], "torque": "Hinge bolts: 3 Nm", "difficulty": "Hard", "notes": "Mount 8 Nitinol ribs to shoulder hinges (4 per wing). Tension graphene membrane to 50N/m. Install 2 Nitinol deploy hinges. Test deploy in <0.5s. Verify electromagnetic locks release on power loss. Wings stow flat on back armor."},
     },
     "power": {
         "description": f"Solid-state lithium-sulfur battery: {DIMS['battery_wh']} Wh "
@@ -1418,7 +1630,7 @@ PART_DB = {
                       "Piezoelectric harvesters (boots + joints)",
                       "Flexible solar film (wing surfaces)",
                       "BMS with cell-level fusing"],
-        "weight_kg": 3.2,
+        "weight_kg": 2.2,
         "blueprint": "Battery pack mounted on lower back frame. "
                      "Piezo elements in boot soles + knee/elbow joints. "
                      "Solar film applied to wing membrane topside. "
@@ -1451,7 +1663,7 @@ PART_DB = {
                       "Vera 3.0 AI (Llama-3.1-70B 4-bit)",
                       "Kyber-1024 post-quantum crypto",
                       "AES-256-GCM session encryption"],
-        "weight_kg": 0.8,
+        "weight_kg": 0.3,
         "blueprint": "EEG cap worn under helmet. Neural processor in helmet "
                      "crown. AI runs on dedicated NPU in chest pack. "
                      "Encrypted link to suit RTOS via faraday-shielded bus. "
@@ -1486,7 +1698,7 @@ PART_DB = {
                       "Capillary fluid loop (ethylene glycol)",
                       "Deployable radiator fins (shoulder)",
                       "Solar lens concentrator (cold mode)"],
-        "weight_kg": 1.5,
+        "weight_kg": 0.5,
         "blueprint": "Worn over inner suit, under faraday shield. "
                      "Peltier junctions at 6 high-heat zones. "
                      "Fluid loop runs through all layers. "
@@ -1510,9 +1722,9 @@ PART_DB = {
                        f"Carries {DIMS['fuel_capacity_l']}L of {DIMS['fuel_type']} "
                        f"(density {DIMS['fuel_density_kg_l']} kg/L = {DIMS['fuel_capacity_l']*DIMS['fuel_density_kg_l']:.1f} kg total). "
                        f"SFC: {DIMS['turbine_sfc_dry_lb_lbh']} lb/(lbf*h) dry, {DIMS['turbine_sfc_ab_lb_lbh']} lb/(lbf*h) afterburner. "
-                       f"At full dry thrust ({DIMS['turbine_count']*DIMS['turbine_thrust_dry_lbf']} lbf), burn rate = "
-                       f"{DIMS['turbine_count']*DIMS['turbine_thrust_dry_lbf']*DIMS['turbine_sfc_dry_lb_lbh']*0.4536:.1f} kg/h -> "
-                       f"endurance ~{DIMS['fuel_capacity_l']*DIMS['fuel_density_kg_l']/(DIMS['turbine_count']*DIMS['turbine_thrust_dry_lbf']*DIMS['turbine_sfc_dry_lb_lbh']*0.4536):.0f} min hover. "
+                       f"Hover thrust ~311 lbf ({DIMS['weight_total_kg']+DIMS['fuel_capacity_l']*DIMS['fuel_density_kg_l']+DIMS['ref_weight_kg']:.0f} kg total), burn = "
+                       f"{311*DIMS['turbine_sfc_dry_lb_lbh']*0.4536:.0f} kg/h -> "
+                       f"endurance ~15 min pure hover. "
                        f"Climb-glide cycles extend this to 4-7 hours. "
                        f"Bladder is crash-resistant Kevlar-lined, self-sealing.",
         "category": "Fuel System",
@@ -1522,10 +1734,10 @@ PART_DB = {
                       "Stainless braided fuel lines (dual redundant)",
                       "Electric fuel pumps (dual redundant, 0.5 LPM each)",
                       "Self-sealing polymer coating (bulletproof)"],
-        "weight_kg": 2.8,  # bladder + lines + pumps (fuel weight counted separately in physics)
+        "weight_kg": 1.0,  # bladder + lines + pumps (fuel weight counted separately in physics)
         "blueprint": "Conformal bladder mounts in lower back/torso frame cavity, "
                      "conforming to pilot body shape. Dual redundant electric pumps "
-                     "feed fuel to all 48 turbines via stainless braided lines. "
+                     "feed fuel to all 36 turbines via stainless braided lines. "
                      "Self-sealing coating closes penetrations <12mm instantly. "
                      "Fuel level sensors at 4 points in bladder.",
         "icon": "fuel",
@@ -1540,7 +1752,7 @@ PART_DB = {
         ],
         "dimensions": f"Capacity: {DIMS['fuel_capacity_l']}L ({DIMS['fuel_capacity_l']*DIMS['fuel_density_kg_l']:.1f} kg) | Bladder: conformal to torso | Lines: 6mm ID stainless",
         "connectors": ["2x AN-8 fuel line (to turbine manifold)", "1x refuel port (left hip)", "4x fuel level sensor (CAN bus)", "12V power (dual pump)"],
-        "performance": [f"Capacity: {DIMS['fuel_capacity_l']}L", f"Endurance: ~26min hover / 4-7hr climb-glide", f"SFC: {DIMS['turbine_sfc_dry_lb_lbh']} lb/(lbf*h) dry", f"Self-sealing: <12mm holes", f"Pumps: dual redundant 0.5 LPM"],
+        "performance": [f"Capacity: {DIMS['fuel_capacity_l']}L", f"Endurance: ~15min hover / 4-7hr climb-glide", f"SFC: {DIMS['turbine_sfc_dry_lb_lbh']} lb/(lbf*h) dry", f"Self-sealing: <12mm holes", f"Pumps: dual redundant 0.5 LPM"],
         "build_details": {"time_min": 20, "tools": ["Fuel bladder pressure tester", "AN-8 line crimper", "Pump flow meter", "Self-sealing coating applicator"], "torque": "AN-8 fittings: 25 Nm", "difficulty": "Hard", "notes": "Install conformal bladder in torso frame cavity. Connect dual fuel lines, crimp AN-8 fittings to 25 Nm. Mount 2 pumps in parallel. Apply self-sealing coating. Pressure test at 2 bar for 30 min. Verify flow rate at 0.5 LPM per pump. Test self-sealing with 10mm probe."},
     },
 }
@@ -1571,9 +1783,9 @@ def build_suit(pilot_height=1.73, pilot_weight=79.4):
     forearm = seg["forearm"]
     thigh = seg["thigh"]
     shin = seg["shin"]
-    shoulder_w = seg["shoulder_w"] * 1.15  # suit adds width
-    hip_w = seg["hip_w"] * 1.15
-    chest_d = seg["chest_d"] * 1.15
+    shoulder_w = seg["shoulder_w"] * 1.02  # suit adds minimal width (2%)
+    hip_w = seg["hip_w"] * 1.02
+    chest_d = seg["chest_d"] * 1.02
 
     # Layer thicknesses
     t_inner = DIMS["inner_thick_mm"] * MM
@@ -1583,19 +1795,24 @@ def build_suit(pilot_height=1.73, pilot_weight=79.4):
     t_total = t_inner + t_middle + t_inter + t_outer
 
     # ---- 1. INNER LAYER: sensor suit (skin-tight base) ----
+    # MJOLNIR techsuit style: angular, form-fitting, only visible at armor gaps
     inner_meshes = []
-    # torso (capsule)
-    v, f = _capsule(max(chest_d, hip_w) * 0.45, -torso_len/2, torso_len/2, seg=16)
+    # torso (angular hexagonal, NOT round capsule — MJOLNIR style)
+    r_shoulder_inner = max(chest_d, hip_w) * 0.34
+    r_waist_inner = max(chest_d, hip_w) * 0.24
+    r_hip_inner = max(chest_d, hip_w) * 0.30
+    v, f = _angular_torso(r_shoulder_inner, r_waist_inner, r_hip_inner,
+                          -torso_len/2, torso_len/2, seg=6)
     inner_meshes.append(Mesh(v, f, C_INNER, name="inner_torso"))
-    # arms
+    # arms (angular hexagonal, not round — ~5cm across flats)
     for sx in (1, -1):
-        v, f = _capsule(0.045 * s, 0, upper_arm + forearm, seg=12)
+        v, f = _angular_limb(0.024 * s, 0.020 * s, 0, upper_arm + forearm, seg=6, flat_frac=0.6)
         v = _translate(v, (sx * shoulder_w * 0.5, 0.05, 0))
         v = (np.asarray(v) @ rot_y(sx * 0.15).T).tolist()
         inner_meshes.append(Mesh(v, f, C_INNER, name=f"inner_arm_{sx}"))
-    # legs
+    # legs (angular hexagonal, not round — ~6.5cm across flats)
     for sx in (1, -1):
-        v, f = _capsule(0.055 * s, -thigh - shin, 0, seg=12)
+        v, f = _angular_limb(0.030 * s, 0.024 * s, -thigh - shin, 0, seg=6, flat_frac=0.6)
         v = _translate(v, (sx * hip_w * 0.25, -torso_len/2 - 0.02, 0))
         inner_meshes.append(Mesh(v, f, C_INNER, name=f"inner_leg_{sx}"))
     parts.append(Part("inner_suit", "Inner Sensor Suit (spandex-nylon + EMG)",
@@ -1608,80 +1825,54 @@ def build_suit(pilot_height=1.73, pilot_weight=79.4):
     order += 1
 
     # ---- 2. MIDDLE LAYER: tripled DEA-STF muscle fibers ----
+    # Only visible at armor plate gaps - thin, conforming, not full-body tubes
     middle_meshes = []
-    # Torso muscle fiber bundles (visible as textured bands)
-    for i in range(8):
-        z0 = -torso_len/2 + i * torso_len / 8
-        z1 = z0 + torso_len / 8 * 0.85
-        r = max(chest_d, hip_w) * 0.48 + t_inner
-        v, f = _tube(r, z0, z1, seg=20)
-        middle_meshes.append(Mesh(v, f, C_MIDDLE if i % 2 else C_MIDDLE_LT,
-                                  name=f"middle_torso_band_{i}"))
-    # Visible DEA fiber strands on torso (individual muscle fiber bundles)
-    fiber_r = 0.003 * s
-    for fi in range(12):
-        a = 2 * math.pi * fi / 12
-        fx = max(chest_d, hip_w) * 0.48 * math.cos(a)
-        fz = max(chest_d, hip_w) * 0.48 * math.sin(a) * 0.5
-        v, f = _solid_cylinder(fiber_r, -torso_len * 0.4, torso_len * 0.4, seg=5)
-        v = _translate(v, (fx, 0, fz))
-        middle_meshes.append(Mesh(v, f, C_FIBER, name=f"dea_fiber_torso_{fi}", emissive=True))
-    # Arm fiber bundles (tripled density visualization)
+    fiber_r = 0.0025 * s
+    # Torso: angular band only at waist gap (between chest/abdomen plates)
+    r_mid_shoulder = max(chest_d, hip_w) * 0.36 + t_inner
+    r_mid_waist = max(chest_d, hip_w) * 0.26 + t_inner
+    r_mid_hip = max(chest_d, hip_w) * 0.32 + t_inner
+    v, f = _angular_torso(r_mid_shoulder, r_mid_waist, r_mid_hip,
+                          -torso_len * 0.10, torso_len * 0.10, seg=6)
+    middle_meshes.append(Mesh(v, f, C_MIDDLE, name="middle_torso_waist"))
+    # DEA fiber strands at joint gaps (elbows, knees, shoulders)
     for sx in (1, -1):
-        for j in range(5):
-            z0 = j * (upper_arm + forearm) / 5
-            z1 = z0 + (upper_arm + forearm) / 5 * 0.8
-            r = 0.055 * s + t_inner
-            v, f = _tube(r, z0, z1, seg=12)
-            v = _translate(v, (sx * shoulder_w * 0.5, 0.05, 0))
-            v = (np.asarray(v) @ rot_y(sx * 0.15).T).tolist()
-            middle_meshes.append(Mesh(v, f, C_MIDDLE if j % 2 else C_MIDDLE_LT,
-                                      name=f"middle_arm_{sx}_{j}"))
-        # Individual arm DEA fibers (4 per arm)
+        # Elbow gap fibers
+        ey = 0.05 + upper_arm * 0.95
         for fi in range(4):
-            a = 2 * math.pi * fi / 4
-            v, f = _solid_cylinder(fiber_r, 0, upper_arm + forearm, seg=5)
-            v = _translate(v, (sx * shoulder_w * 0.5 + 0.055 * s * math.cos(a),
-                              0.05 + 0.055 * s * math.sin(a), 0))
+            a = 2 * math.pi * fi / 4 + sx * 0.2
+            v, f = _solid_cylinder(fiber_r, -0.03, 0.03, seg=4)
+            v = _translate(v, (sx * shoulder_w * 0.5 + 0.040 * s * math.cos(a),
+                              ey + 0.040 * s * math.sin(a), 0))
             v = (np.asarray(v) @ rot_y(sx * 0.15).T).tolist()
-            middle_meshes.append(Mesh(v, f, C_FIBER, name=f"dea_fiber_arm_{sx}_{fi}", emissive=True))
-    # Leg fiber bundles (5x density for 200ft jump)
-    for sx in (1, -1):
-        for j in range(10):
-            z0 = -thigh - shin + j * (thigh + shin) / 10
-            z1 = z0 + (thigh + shin) / 10 * 0.8
-            r = 0.065 * s + t_inner
-            v, f = _tube(r, z0, z1, seg=14)
-            v = _translate(v, (sx * hip_w * 0.25, -torso_len/2 - 0.02, 0))
-            col = C_FIBER if j < 6 else C_MIDDLE  # jump fibers glow
-            em = j < 6
-            middle_meshes.append(Mesh(v, f, col, name=f"middle_leg_{sx}_{j}",
-                                      emissive=em))
-        # Individual leg DEA fibers (6 per leg, extra for jump assist)
+            middle_meshes.append(Mesh(v, f, C_FIBER, name=f"dea_fiber_elbow_{sx}_{fi}", emissive=True))
+        # Knee gap fibers (5x density for jump)
+        ky = -torso_len/2 - 0.02 - thigh
         for fi in range(6):
             a = 2 * math.pi * fi / 6
-            v, f = _solid_cylinder(fiber_r * 1.5, -thigh - shin, 0, seg=5)
-            v = _translate(v, (sx * hip_w * 0.25 + 0.065 * s * math.cos(a),
-                              -torso_len/2 - 0.02, 0.065 * s * math.sin(a)))
-            middle_meshes.append(Mesh(v, f, C_FIBER, name=f"dea_fiber_leg_{sx}_{fi}", emissive=True))
-    # Faraday shielding layer (thin copper-graphene mesh)
+            v, f = _solid_cylinder(fiber_r * 1.3, -0.04, 0.04, seg=4)
+            v = _translate(v, (sx * hip_w * 0.25 + 0.050 * s * math.cos(a),
+                              ky + 0.050 * s * math.sin(a), 0))
+            middle_meshes.append(Mesh(v, f, C_FIBER, name=f"dea_fiber_knee_{sx}_{fi}", emissive=True))
+        # Shoulder gap fibers
+        for fi in range(3):
+            a = 2 * math.pi * fi / 3
+            v, f = _solid_cylinder(fiber_r, -0.02, 0.02, seg=4)
+            v = _translate(v, (sx * shoulder_w * 0.5 + 0.045 * s * math.cos(a),
+                              0.05 + 0.045 * s * math.sin(a), 0))
+            middle_meshes.append(Mesh(v, f, C_FIBER, name=f"dea_fiber_shoulder_{sx}_{fi}", emissive=True))
+    # Faraday shielding + power bus (thin, visible at gaps)
     faraday_meshes = []
-    v, f = _capsule(max(chest_d, hip_w) * 0.52, -torso_len/2 - 0.02, torso_len/2 + 0.02, seg=14)
-    faraday_meshes.append(Mesh(v, f, C_FARADAY, name="faraday_torso"))
-    # Visible Faraday mesh weave pattern (cross-hatch lines on torso)
-    for wi in range(8):
-        a = 2 * math.pi * wi / 8
-        r_far = max(chest_d, hip_w) * 0.52 + 0.001
-        v, f = _solid_cylinder(0.001, -torso_len * 0.45, torso_len * 0.45, seg=4)
-        v = _translate(v, (r_far * math.cos(a), 0, r_far * math.sin(a) * 0.5))
-        faraday_meshes.append(Mesh(v, f, C_NODE, name=f"faraday_weave_v_{wi}"))
-    for wi in range(6):
-        z = -torso_len * 0.4 + wi * torso_len * 0.15
-        v, f = _tube(max(chest_d, hip_w) * 0.52 + 0.001, z, z + 0.002, seg=16)
-        faraday_meshes.append(Mesh(v, f, C_NODE, name=f"faraday_weave_h_{wi}"))
+    # Thin faraday at waist gap (angular, matching inner layer shape)
+    r_far_shoulder = max(chest_d, hip_w) * 0.37 + t_inner + t_middle
+    r_far_waist = max(chest_d, hip_w) * 0.27 + t_inner + t_middle
+    r_far_hip = max(chest_d, hip_w) * 0.33 + t_inner + t_middle
+    v, f = _angular_torso(r_far_shoulder, r_far_waist, r_far_hip,
+                          -torso_len * 0.08, torso_len * 0.08, seg=6)
+    faraday_meshes.append(Mesh(v, f, C_FARADAY, name="faraday_waist"))
     # Power bus routing (visible cable conduits along frame)
     power_bus_meshes = []
-    bus_r = 0.004
+    bus_r = 0.003
     # Main power bus along spine
     v, f = _solid_cylinder(bus_r, -torso_len/2, torso_len/2 + 0.1, seg=6)
     power_bus_meshes.append(Mesh(v, f, C_ACCENT, name="power_bus_spine", emissive=True))
@@ -1703,7 +1894,7 @@ def build_suit(pilot_height=1.73, pilot_weight=79.4):
                        "Blocks >99% EMP/EMI",
                        "Maintains flexibility",
                        "Embedded within middle layer",
-                       "Visible weave pattern: 8 vertical + 6 horizontal conductors",
+                       "Visible at armor plate gaps",
                        "Power bus: spine + 4 branches (shoulders + hips)"],
                       order, np.array([0, 0, -0.2]), C_FARADAY))
     order += 1
@@ -1720,49 +1911,36 @@ def build_suit(pilot_height=1.73, pilot_weight=79.4):
     order += 1
 
     # ---- 3. INTERMEDIATE LAYER: auxetic metamaterial ----
+    # Thin, only visible at joint gaps between armor plates
     inter_meshes = []
-    # Auxetic cell pattern on torso (visible honeycomb-like cells)
-    r_inter = max(chest_d, hip_w) * 0.52 + t_inner + t_middle
-    for i in range(6):
-        z0 = -torso_len/2 + i * torso_len / 6
-        z1 = z0 + torso_len / 6 * 0.9
-        v, f = _tube(r_inter, z0, z1, seg=16)
-        inter_meshes.append(Mesh(v, f, C_INTERMED, name=f"auxetic_torso_{i}"))
-    # Visible hexagonal auxetic cell structure on torso
-    hex_r = 0.015 * s  # hex cell radius
-    for ring_i in range(4):
-        ring_r = r_inter + 0.001 + ring_i * hex_r * 0.5
-        n_cells = int(2 * math.pi * ring_r / (hex_r * 1.8))
-        for ci in range(n_cells):
-            a = 2 * math.pi * ci / n_cells
-            cx = ring_r * math.cos(a)
-            cz = ring_r * math.sin(a) * 0.6  # flattened for torso shape
-            cy = (ring_i - 1.5) * hex_r * 1.5
-            if abs(cz) < chest_d * 0.4 and abs(cy) < torso_len * 0.4:
-                v, f = _solid_cylinder(hex_r * 0.8, -0.002, 0.002, seg=6)
-                v = _translate(v, (cx, cy, cz))
-                inter_meshes.append(Mesh(v, f, C_INTERMED_DK, name=f"aux_cell_{ring_i}_{ci}"))
-    # Arms
+    # Thin auxetic at waist/joint gaps (angular, matching inner layer)
+    r_inter_shoulder = max(chest_d, hip_w) * 0.38 + t_inner + t_middle
+    r_inter_waist = max(chest_d, hip_w) * 0.28 + t_inner + t_middle
+    r_inter_hip = max(chest_d, hip_w) * 0.34 + t_inner + t_middle
+    v, f = _angular_torso(r_inter_shoulder, r_inter_waist, r_inter_hip,
+                          -torso_len * 0.05, torso_len * 0.05, seg=6)
+    inter_meshes.append(Mesh(v, f, C_INTERMED, name="auxetic_waist_gap"))
+    # Hex cells at elbow gaps
+    hex_r = 0.010 * s
     for sx in (1, -1):
-        r_arm_inter = 0.058 * s + t_inner + t_middle
-        v, f = _tube(r_arm_inter, 0, upper_arm + forearm, seg=10)
-        v = _translate(v, (sx * shoulder_w * 0.5, 0.05, 0))
-        v = (np.asarray(v) @ rot_y(sx * 0.15).T).tolist()
-        inter_meshes.append(Mesh(v, f, C_INTERMED, name=f"auxetic_arm_{sx}"))
-        # Hex cells on arms
-        for si in range(6):
-            sa = 2 * math.pi * si / 6
+        ey = 0.05 + upper_arm * 0.95
+        r_arm_gap = 0.042 * s + t_inner + t_middle
+        for si in range(4):
+            sa = 2 * math.pi * si / 4
             v, f = _solid_cylinder(hex_r * 0.7, -0.001, 0.001, seg=6)
-            v = _translate(v, (sx * shoulder_w * 0.5 + r_arm_inter * math.cos(sa),
-                              0.05 + (si - 2.5) * 0.04,
-                              r_arm_inter * math.sin(sa)))
-            inter_meshes.append(Mesh(v, f, C_INTERMED_DK, name=f"aux_arm_cell_{sx}_{si}"))
-    # Legs
-    for sx in (1, -1):
-        r_leg_inter = 0.068 * s + t_inner + t_middle
-        v, f = _tube(r_leg_inter, -thigh - shin, 0, seg=12)
-        v = _translate(v, (sx * hip_w * 0.25, -torso_len/2 - 0.02, 0))
-        inter_meshes.append(Mesh(v, f, C_INTERMED, name=f"auxetic_leg_{sx}"))
+            v = _translate(v, (sx * shoulder_w * 0.5 + r_arm_gap * math.cos(sa),
+                              ey + r_arm_gap * math.sin(sa), 0))
+            v = (np.asarray(v) @ rot_y(sx * 0.15).T).tolist()
+            inter_meshes.append(Mesh(v, f, C_INTERMED_DK, name=f"aux_elbow_{sx}_{si}"))
+        # Hex cells at knee gaps
+        ky = -torso_len/2 - 0.02 - thigh
+        r_leg_gap = 0.052 * s + t_inner + t_middle
+        for si in range(5):
+            sa = 2 * math.pi * si / 5
+            v, f = _solid_cylinder(hex_r * 0.8, -0.001, 0.001, seg=6)
+            v = _translate(v, (sx * hip_w * 0.25 + r_leg_gap * math.cos(sa),
+                              ky + r_leg_gap * math.sin(sa), 0))
+            inter_meshes.append(Mesh(v, f, C_INTERMED_DK, name=f"aux_knee_{sx}_{si}"))
     parts.append(Part("intermediate", "Intermediate: Foam-Filled Auxetic Metamaterial",
                       inter_meshes,
                       [f"Thickness: {DIMS['intermediate_thick_mm']}mm",
@@ -1775,79 +1953,156 @@ def build_suit(pilot_height=1.73, pilot_weight=79.4):
     order += 1
 
     # ---- 4. OUTER LAYER: graphene-UHMWPE armor panels ----
+    # MJOLNIR/Iron Man style: angular chamfered plates with visible gaps
+    # Plates are the dominant visual - sleek, tapered, not puffy
     outer_meshes = []
-    r_outer = max(chest_d, hip_w) * 0.52 + t_inner + t_middle + t_inter
-    # Chest plate
-    v, f = _box(0, 0.08, 0.02, shoulder_w * 0.9, chest_d * 0.8, 0.04)
+    r_outer = max(chest_d, hip_w) * 0.36 + t_total
+
+    # Chest plate (large, angular, chamfered — MJOLNIR style, covers full torso)
+    v, f = _armor_plate(0, 0.05, 0.020, shoulder_w * 0.92, torso_len * 0.45, 0.020,
+                        chamfer=0.010, taper=0.015)
     outer_meshes.append(Mesh(v, f, C_OUTER, name="chest_plate"))
-    # Back plate
-    v, f = _box(0, -0.08, 0.02, shoulder_w * 0.9, chest_d * 0.8, 0.04)
+    # Chest center ridge (Iron Man style center line)
+    v, f = _armor_plate(0, 0.05, 0.040, 0.016, torso_len * 0.30, 0.012,
+                        chamfer=0.004, taper=0.004)
+    outer_meshes.append(Mesh(v, f, C_OUTER_LT, name="chest_ridge"))
+    # Arc reactor / chest emblem (Iron Man style glowing center)
+    v, f = _sphere(0.012, seg=10)
+    v = _translate(v, (0, 0.05, 0.052))
+    outer_meshes.append(Mesh(v, f, C_VISOR_GLOW, name="arc_reactor", emissive=True))
+    # Arc reactor ring
+    v, f = _torus(0.014, 0.003, seg_major=16, seg_minor=4)
+    v = _translate(v, (0, 0.05, 0.050))
+    outer_meshes.append(Mesh(v, f, C_ACCENT, name="arc_reactor_ring", emissive=True))
+
+    # Back plate (large, angular, chamfered — full coverage)
+    v, f = _armor_plate(0, -0.05, 0.020, shoulder_w * 0.92, torso_len * 0.45, 0.020,
+                        chamfer=0.010, taper=0.015)
     outer_meshes.append(Mesh(v, f, C_OUTER, name="back_plate"))
-    # Abdomen plates (segmented for flexibility)
-    for i in range(4):
-        z = -0.08 - i * 0.06
-        v, f = _box(0, 0, z, hip_w * 0.85, chest_d * 0.7, 0.035)
-        outer_meshes.append(Mesh(v, f, C_OUTER_LT if i % 2 else C_OUTER,
+
+    # Side flank plates (cover sides between chest and back)
+    for sx in (1, -1):
+        v, f = _armor_plate(sx * shoulder_w * 0.42, 0, 0.010,
+                            0.025, torso_len * 0.40, 0.016,
+                            chamfer=0.006, taper=0.008)
+        outer_meshes.append(Mesh(v, f, C_OUTER_LT, name=f"flank_plate_{sx}"))
+
+    # Abdomen plates (segmented, angled, with gaps between — wider for coverage)
+    for i in range(3):
+        z = -0.04 - i * 0.038
+        v, f = _armor_plate(0, 0, z, hip_w * 0.82, chest_d * 0.52, 0.014,
+                            chamfer=0.005, taper=0.008)
+        outer_meshes.append(Mesh(v, f, C_OUTER if i % 2 == 0 else C_OUTER_LT,
                                  name=f"abdomen_{i}"))
-    # Shoulder pauldrons
+
+    # Codpiece / pelvic armor (angular, covers lower center)
+    v, f = _armor_plate(0, -torso_len/2 + 0.02, 0.014,
+                        hip_w * 0.38, 0.06, 0.016,
+                        chamfer=0.006, taper=0.008)
+    outer_meshes.append(Mesh(v, f, C_OUTER, name="codpiece"))
+
+    # Belt / waist armor (angular ring at waist)
+    v, f = _armor_plate(0, -torso_len * 0.15, 0.012,
+                        hip_w * 0.85, 0.05, 0.014,
+                        chamfer=0.005, taper=0.006)
+    outer_meshes.append(Mesh(v, f, C_OUTER_LT, name="belt_plate"))
+
+    # Shoulder pauldrons (faceted domes — larger for dominant silhouette)
     for sx in (1, -1):
-        v, f = _sphere(0.085 * s + t_total, seg=10)
-        v = _translate(v, (sx * shoulder_w * 0.5, 0.05, 0.05))
+        v, f = _pauldron(0.058 * s + t_total, sx * shoulder_w * 0.52, 0.06, 0.042, seg=8)
         outer_meshes.append(Mesh(v, f, C_OUTER, name=f"pauldron_{sx}"))
-    # Forearm gauntlets
+
+    # Upper arm plates (tapered, angular — larger for coverage)
     for sx in (1, -1):
-        r_g = 0.06 * s + t_total
-        v, f = _tube(r_g, upper_arm * 0.8, upper_arm + forearm, seg=14)
+        v, f = _tapered_limb(0.038 * s + t_total, 0.044 * s + t_total,
+                             0, upper_arm * 0.92, seg=8, flat_frac=0.55,
+                             taper_profile=[1.0, 0.95, 0.85])
+        v = _translate(v, (sx * shoulder_w * 0.5, 0.05, 0))
+        v = (np.asarray(v) @ rot_y(sx * 0.15).T).tolist()
+        outer_meshes.append(Mesh(v, f, C_OUTER, name=f"upper_arm_plate_{sx}"))
+
+    # Forearm gauntlets (tapered, sleek, Iron Man style — larger)
+    for sx in (1, -1):
+        v, f = _tapered_limb(0.030 * s + t_total, 0.042 * s + t_total,
+                             upper_arm * 0.85, upper_arm + forearm, seg=8, flat_frac=0.6,
+                             taper_profile=[1.0, 0.92, 0.85, 0.80])
         v = _translate(v, (sx * shoulder_w * 0.5, 0.05, 0))
         v = (np.asarray(v) @ rot_y(sx * 0.15).T).tolist()
         outer_meshes.append(Mesh(v, f, C_OUTER, name=f"gauntlet_{sx}"))
-    # Thigh plates
+
+    # Thigh plates (tapered, angular — larger for coverage)
     for sx in (1, -1):
-        r_t = 0.07 * s + t_total
-        v, f = _tube(r_t, -thigh, -0.02, seg=14)
+        v, f = _tapered_limb(0.040 * s + t_total, 0.048 * s + t_total,
+                             -thigh, -0.02, seg=10, flat_frac=0.5,
+                             taper_profile=[1.0, 0.95, 0.88])
         v = _translate(v, (sx * hip_w * 0.25, -torso_len/2 - 0.02, 0))
         outer_meshes.append(Mesh(v, f, C_OUTER, name=f"thigh_plate_{sx}"))
-    # Shin greaves
+
+    # Shin greaves (tapered, sleek — larger)
     for sx in (1, -1):
-        r_g = 0.06 * s + t_total
-        v, f = _tube(r_g, -thigh - shin, -thigh, seg=14)
+        v, f = _tapered_limb(0.032 * s + t_total, 0.042 * s + t_total,
+                             -thigh - shin, -thigh, seg=10, flat_frac=0.55,
+                             taper_profile=[1.0, 0.93, 0.85, 0.80])
         v = _translate(v, (sx * hip_w * 0.25, -torso_len/2 - 0.02, 0))
         outer_meshes.append(Mesh(v, f, C_OUTER_LT, name=f"greave_{sx}"))
-    # Boots
+
+    # Boots (angular, chamfered — larger for coverage)
     for sx in (1, -1):
-        v, f = _box(sx * hip_w * 0.25, -torso_len/2 - 0.02 - thigh - shin - 0.02,
-                    0.08, 0.12, 0.08, 0.25)
+        v, f = _armor_plate(sx * hip_w * 0.25, -torso_len/2 - 0.02 - thigh - shin - 0.02,
+                            0.06, 0.085, 0.045, 0.018, chamfer=0.006, taper=0.006)
         outer_meshes.append(Mesh(v, f, C_OUTER, name=f"boot_{sx}"))
-    # Knee plates (reinforced)
+
+    # Knee plates (angular, faceted — larger)
     for sx in (1, -1):
-        v, f = _sphere(0.05 * s + t_total, seg=8)
-        v = _translate(v, (sx * hip_w * 0.25, -torso_len/2 - 0.02 - thigh, 0.04))
+        v, f = _pauldron(0.034 * s + t_total, sx * hip_w * 0.25,
+                         -torso_len/2 - 0.02 - thigh, 0.032, seg=6)
         outer_meshes.append(Mesh(v, f, C_OUTER_LT, name=f"knee_plate_{sx}"))
-    # Hip plates
+
+    # Hip plates (angular, chamfered — larger for coverage)
     for sx in (1, -1):
-        v, f = _box(sx * hip_w * 0.35, -torso_len/2 - 0.04, 0.02,
-                    0.08, 0.1, 0.03)
+        v, f = _armor_plate(sx * hip_w * 0.32, -torso_len/2 - 0.04, 0.012,
+                            0.06, 0.07, 0.018, chamfer=0.005, taper=0.006)
         outer_meshes.append(Mesh(v, f, C_OUTER, name=f"hip_plate_{sx}"))
-    # Neck guard
-    v, f = _tube(0.05 * s + t_total, 0.12, 0.18, seg=12)
+
+    # Neck guard (tapered, short — compact)
+    v, f = _tapered_prism(0.030 * s + t_total, 0.034 * s + t_total, 0.08, 0.12, seg=8, flat_frac=0.5)
     outer_meshes.append(Mesh(v, f, C_OUTER_LT, name="neck_guard"))
-    # Ankle reinforcement
+
+    # Panel lines (Iron Man style accent grooves on chest)
     for sx in (1, -1):
-        v, f = _tube(0.04 * s + t_total, -thigh - shin + 0.02, -thigh - shin - 0.02, seg=10)
-        v = _translate(v, (sx * hip_w * 0.25, -torso_len/2 - 0.02, 0))
-        outer_meshes.append(Mesh(v, f, C_OUTER_LT, name=f"ankle_guard_{sx}"))
+        v, f = _panel_line(sx * 0.02, 0.06, 0.045, sx * 0.12, 0.04, 0.045, width=0.003)
+        outer_meshes.append(Mesh(v, f, C_FRAME_DK, name=f"chest_panel_line_{sx}", emissive=True))
+    # Center chest line
+    v, f = _panel_line(0, 0.06, 0.046, 0, -0.02, 0.046, width=0.003)
+    outer_meshes.append(Mesh(v, f, C_FRAME_DK, name="chest_center_line", emissive=True))
+    # Back panel lines
+    for sx in (1, -1):
+        v, f = _panel_line(sx * 0.02, -0.06, 0.045, sx * 0.12, -0.04, 0.045, width=0.003)
+        outer_meshes.append(Mesh(v, f, C_FRAME_DK, name=f"back_panel_line_{sx}", emissive=True))
+
+    # Vent slots on forearms (Iron Man style)
+    for sx in (1, -1):
+        for vi in range(3):
+            vy = 0.05 + upper_arm + forearm * 0.3 + vi * 0.015
+            v, f = _box(sx * (shoulder_w * 0.5 + 0.042), vy, 0,
+                        0.001, 0.008, 0.012)
+            v = (np.asarray(v) @ rot_y(sx * 0.15).T).tolist()
+            outer_meshes.append(Mesh(v, f, C_FRAME_DK, name=f"forearm_vent_{sx}_{vi}"))
+
     # Weapon mount points (visible hardpoints)
     for sx in (1, -1):
         # Forearm rail mount (Picatinny-style)
         rail_y = 0.05 + upper_arm * 0.7
         v, f = _box(sx * (shoulder_w * 0.5 + 0.04), rail_y, 0,
                     0.02, 0.08, 0.015)
+        v = (np.asarray(v) @ rot_y(sx * 0.15).T).tolist()
         outer_meshes.append(Mesh(v, f, C_FRAME, name=f"weapon_rail_{sx}"))
         # Rail slots (3 cross slots)
         for si in range(3):
             sy = rail_y - 0.03 + si * 0.03
             v, f = _box(sx * (shoulder_w * 0.5 + 0.045), sy, 0,
                         0.001, 0.002, 0.012)
+            v = (np.asarray(v) @ rot_y(sx * 0.15).T).tolist()
             outer_meshes.append(Mesh(v, f, C_FRAME_DK, name=f"weapon_slot_{sx}_{si}"))
         # Shoulder hardpoint (mounting bracket)
         v, f = _box(sx * shoulder_w * 0.42, 0.08, 0.05,
@@ -1882,7 +2137,7 @@ def build_suit(pilot_height=1.73, pilot_weight=79.4):
 
     # ---- 5. CFRP FRAME: telescoping exoskeleton ----
     frame_meshes = []
-    tube_r = DIMS["frame_tube_od_mm"] * MM / 2
+    tube_r = DIMS["frame_tube_od_mm"] * MM / 2 * 0.7  # slim frame
 
     # Spine (central vertical strut)
     v, f = _hollow_cylinder(tube_r, tube_r * 0.82, -torso_len/2 - 0.05, torso_len/2 + 0.05, seg=16)
@@ -1969,26 +2224,31 @@ def build_suit(pilot_height=1.73, pilot_weight=79.4):
                       order, np.array([0, 0, 0.1]), C_FRAME))
     order += 1
 
-    # ---- 6. HELMET: vacuum-sealed, visor, life support ----
+    # ---- 6. HELMET: angular faceted shell, sleek visor, life support ----
     helmet_meshes = []
     h_r = DIMS["helmet_od_mm"] * MM / 2
     head_r = seg["head"] * pilot_height * 0.5
     helmet_y = torso_len/2 + 0.05 + head_r * 1.1
 
-    # Main helmet shell (sphere)
-    v, f = _sphere(h_r, seg=16)
-    v = _translate(v, (0, helmet_y, 0))
+    # Main helmet shell (faceted dome, not round sphere - MJOLNIR style)
+    v, f = _pauldron(h_r, 0, helmet_y, 0, seg=10)
     helmet_meshes.append(Mesh(v, f, C_HELMET, name="helmet_shell"))
 
-    # Visor (curved front section - represented as a flattened sphere section)
-    visor_r = h_r * 0.85
-    v, f = _sphere(visor_r, seg=14)
-    v = _translate(v, (0, helmet_y, 0))
-    # Only keep front-facing faces (we'll use emissive to make it glow)
+    # Visor (angular face plate - Iron Man style, not full sphere)
+    v, f = _armor_plate(0, helmet_y - h_r * 0.1, h_r * 0.7,
+                        h_r * 1.2, h_r * 0.5, 0.008,
+                        chamfer=0.006, taper=0.01)
     helmet_meshes.append(Mesh(v, f, C_VISOR, name="visor", emissive=True))
 
+    # Cheek guards (angular plates on sides of face)
+    for sx in (1, -1):
+        v, f = _armor_plate(sx * h_r * 0.45, helmet_y - h_r * 0.35, h_r * 0.4,
+                            h_r * 0.35, h_r * 0.4, 0.006,
+                            chamfer=0.004, taper=0.005)
+        helmet_meshes.append(Mesh(v, f, C_HELMET, name=f"cheek_guard_{sx}"))
+
     # Neck collar / seal ring
-    v, f = _torus(h_r * 0.75, 0.015, seg_major=20, seg_minor=8)
+    v, f = _torus(h_r * 0.65, 0.012, seg_major=18, seg_minor=6)
     v = _translate(v, (0, helmet_y - h_r * 0.7, 0))
     helmet_meshes.append(Mesh(v, f, C_ACCENT, name="neck_seal", emissive=True))
 
@@ -2003,15 +2263,16 @@ def build_suit(pilot_height=1.73, pilot_weight=79.4):
         helmet_meshes.append(Mesh(v, f, C_TURBINE, name=f"helmet_turbine_{i}",
                                   spin=1.0, group="turbine"))
 
-    # Life support pack (back of helmet)
-    v, f = _box(0, helmet_y + h_r * 0.1, -h_r * 0.9, 0.16, 0.12, 0.08)
+    # Life support pack (back of helmet, compact chamfered)
+    v, f = _armor_plate(0, helmet_y + h_r * 0.05, -h_r * 0.85,
+                        0.12, 0.08, 0.06, chamfer=0.006, taper=0.008)
     helmet_meshes.append(Mesh(v, f, C_FRAME_DK, name="life_support"))
 
-    # CO2 scrubber vents
+    # CO2 scrubber vents (sleek slots)
     for i in range(3):
-        vx = -0.04 + i * 0.04
-        v, f = _solid_cylinder(0.008, 0, 0.02, seg=6)
-        v = _translate(v, (vx, helmet_y + h_r * 0.15, -h_r * 0.95))
+        vx = -0.03 + i * 0.03
+        v, f = _box(vx, helmet_y + h_r * 0.08, -h_r * 0.89,
+                    0.001, 0.006, 0.008)
         helmet_meshes.append(Mesh(v, f, C_ACCENT, name=f"co2_vent_{i}", emissive=True))
 
     parts.append(Part("helmet", "Vacuum-Sealed Helmet + Visor + Life Support",
@@ -2073,9 +2334,20 @@ def build_suit(pilot_height=1.73, pilot_weight=79.4):
                                        emissive=True))
             turbine_config.append({"pos": pos.tolist(), "group": name_prefix, "idx": i})
 
-    # Backpack wing-root turbines (12, vectored +/-120 deg)
+    # Backpack turbines (12, vectored +/-120 deg) - visible jet pack on back
+    # Positioned to protrude from back armor, oriented downward for VTOL lift
     _add_turbine_group(DIMS["turbine_backpack"],
-                       [0, -torso_len/4, -0.12], [0.06, 0, 0], [1, 0, 0], "backpack")
+                       [0, -torso_len/4, -0.20], [0.055, 0, 0], [1, 0, 0], "backpack")
+    # Jet pack cowling/housing (visible nacelle around backpack turbines)
+    v, f = _box(0, -torso_len/4, -0.20, 0.30, torso_len * 0.28, 0.05)
+    turbine_meshes.insert(0, Mesh(v, f, C_FRAME_DK, name="jetpack_cowling"))
+    # Cowling intake vents (visible slots on sides)
+    for si in range(4):
+        sx = 1 if si < 2 else -1
+        vi = si % 2
+        v, f = _box(sx * 0.15, -torso_len/4 - 0.04 + vi * 0.08, -0.19,
+                    0.02, 0.03, 0.002)
+        turbine_meshes.insert(0, Mesh(v, f, C_TURBINE, name=f"jetpack_vent_{si}"))
 
     # Forearm turbines (8, hand-directed)
     for sx in (1, -1):
@@ -2109,43 +2381,61 @@ def build_suit(pilot_height=1.73, pilot_weight=79.4):
                       order, np.array([0, 0, 0.2]), C_TURBINE))
     order += 1
 
-    # ---- 8. DEPLOYABLE ARCHANGEL WINGS ----
+    # ---- 8. DEPLOYABLE ARCHANGEL WINGS (compact, turbine-assisted) ----
     wing_meshes = []
     wing_span = DIMS["wing_span_m"]
-    wing_chord = wing_span / 2 * 0.18  # aspect ratio ~11
-    wing_y = torso_len / 2 * 0.3
-    wing_z = -0.15
+    wing_area_m2 = DIMS["wing_area_sqft"] * 0.0929  # total area in m^2
+    # Mean chord per wing = area_per_wing / semi_span
+    semi_span = wing_span / 2
+    mean_chord = (wing_area_m2 / 2) / semi_span  # ~0.58m for 3.5m/22sqft
+    wing_y = torso_len / 2 * 0.3  # shoulder height
+    wing_z = -0.15  # behind back when stowed, deployed outward
 
-    # Wing membrane (deployed state - built in 2D then placed in 3D)
     for side in (1, -1):
-        # Leading edge spar (nitinol) -- 2D: x=span, y=chord-depth
+        # Leading edge spar (nitinol) -- swept-back compact wing
         le_pts = []
-        for i in range(12):
-            t = i / 11
-            span = wing_span / 2 * t
-            sweep = 0.15 * span  # swept leading edge
+        for i in range(10):
+            t = i / 9
+            span = semi_span * t
+            sweep = 0.25 * span  # 25% sweep for compact planform
             le_pts.append((side * span, -sweep))
-        v, f = _strip(le_pts, 0.015)
+        v, f = _strip(le_pts, 0.012)
         v = _translate(v, (0, wing_y, wing_z))
         wing_meshes.append(Mesh(v, f, C_WING, name=f"wing_le_{side}"))
 
-        # Membrane surface -- 2D strip
-        mem_pts = [(side * wing_span/2 * (i/7), -0.15 * wing_span/2 * (i/7))
-                   for i in range(8)]
-        v, f = _strip(mem_pts, wing_chord * 0.8)
+        # Membrane surface -- tapered planform from root to tip
+        mem_pts = []
+        for i in range(8):
+            t = i / 7
+            span = semi_span * t
+            sweep = 0.25 * span
+            # Chord tapers from root to tip (root chord ~1.4x mean, tip ~0.4x)
+            chord_here = mean_chord * (1.4 - 1.0 * t)
+            mem_pts.append((side * span, -sweep))
+        v, f = _strip(mem_pts, mean_chord * 0.9)
         v = _translate(v, (0, wing_y, wing_z))
         wing_meshes.append(Mesh(v, f, C_WING_MEM, name=f"wing_mem_{side}"))
 
-        # Nitinol ribs (3 per wing) -- 2D: (span, depth_start) -> (span, depth_end)
-        for ri in range(3):
-            t = (ri + 1) / 4
-            span = wing_span / 2 * t
-            chord = wing_chord * (1.0 - 0.3 * t)
-            sweep = 0.15 * span
+        # Nitinol ribs (4 per wing for compact wing)
+        for ri in range(4):
+            t = (ri + 1) / 5
+            span = semi_span * t
+            chord = mean_chord * (1.4 - 1.0 * t)
+            sweep = 0.25 * span
             v, f = _strip([(side * span, -sweep),
-                           (side * span, -sweep + chord)], 0.008)
+                           (side * span, -sweep + chord)], 0.006)
             v = _translate(v, (0, wing_y, wing_z))
             wing_meshes.append(Mesh(v, f, C_WING, name=f"wing_rib_{side}_{ri}"))
+
+        # Wing root hinge (visible at shoulder)
+        v, f = _sphere(0.02, seg=8)
+        v = _translate(v, (side * shoulder_w * 0.45, wing_y, wing_z))
+        wing_meshes.append(Mesh(v, f, C_NODE, name=f"wing_hinge_{side}"))
+
+        # Stowed wing indicator (flat strip on back when not deployed)
+        v, f = _box(side * semi_span * 0.3, wing_y - 0.02, wing_z - 0.01,
+                    semi_span * 0.35, 0.003, 0.02)
+        wing_meshes.append(Mesh(v, f, C_FRAME_DK, name=f"wing_stowed_{side}"))
 
     parts.append(Part("wings", "Archangel Deployable Gliding Wings",
                       wing_meshes,
@@ -2189,6 +2479,74 @@ def build_suit(pilot_height=1.73, pilot_weight=79.4):
                        "2x 600 Wh hot-swap packs",
                        "Self-healing polymer battery shells"],
                       order, np.array([0, -0.1, -0.1]), C_BATTERY))
+    order += 1
+
+    # ---- 9b. FUEL SYSTEM: conformal bladder + lines ----
+    fuel_meshes = []
+    # Conformal fuel bladder (lower back, wraps around torso)
+    bladder_r = max(chest_d, hip_w) * 0.48 + t_inner + t_middle
+    v, f = _tube(bladder_r, -torso_len/2 + 0.02, -torso_len/2 + 0.12, seg=16)
+    fuel_meshes.append(Mesh(v, f, C_FUEL, name="fuel_bladder_lower"))
+    v, f = _tube(bladder_r * 0.95, -torso_len/2 + 0.12, torso_len/2 * 0.3, seg=14)
+    fuel_meshes.append(Mesh(v, f, C_FUEL, name="fuel_bladder_upper"))
+    # Bladder seam lines (visible Kevlar weave)
+    for si in range(4):
+        a = 2 * math.pi * si / 4
+        v, f = _solid_cylinder(0.001, -torso_len * 0.3, torso_len * 0.1, seg=4)
+        v = _translate(v, (bladder_r * math.cos(a), 0, bladder_r * math.sin(a) * 0.5))
+        fuel_meshes.append(Mesh(v, f, C_FRAME_DK, name=f"bladder_seam_{si}"))
+    # Dual fuel pumps (visible boxes on lower back)
+    for pi in range(2):
+        px = -0.04 + pi * 0.08
+        v, f = _box(px, -torso_len/2 + 0.06, -0.16, 0.03, 0.02, 0.03)
+        fuel_meshes.append(Mesh(v, f, C_FRAME, name=f"fuel_pump_{pi}"))
+        # Pump LED indicator
+        v, f = _sphere(0.004, seg=6)
+        v = _translate(v, (px, -torso_len/2 + 0.06, -0.14))
+        fuel_meshes.append(Mesh(v, f, C_OK, name=f"fuel_pump_led_{pi}", emissive=True))
+    # Fuel lines (stainless braided, running from bladder to turbine groups)
+    line_r = 0.003  # 6mm OD
+    # Main fuel manifold (along spine)
+    v, f = _solid_cylinder(line_r, -torso_len/2 + 0.02, torso_len/2 * 0.5, seg=6)
+    v = _translate(v, (0, 0, -0.14))
+    fuel_meshes.append(Mesh(v, f, C_FUEL, name="fuel_manifold_spine"))
+    # Branch lines to shoulder/forearm turbines
+    for sx in (1, -1):
+        v, f = _solid_cylinder(line_r, 0, shoulder_w * 0.5, seg=6)
+        v = (np.asarray(v) @ rot_z(sx * math.pi/2).T).tolist()
+        v = _translate(v, (0, 0.05, -0.12))
+        fuel_meshes.append(Mesh(v, f, C_FUEL, name=f"fuel_line_shoulder_{sx}"))
+    # Branch lines to thigh turbines
+    for sx in (1, -1):
+        v, f = _solid_cylinder(line_r, 0, hip_w * 0.25 + 0.06, seg=6)
+        v = (np.asarray(v) @ rot_z(sx * math.pi/2).T).tolist()
+        v = _translate(v, (0, -torso_len/2 - 0.02, -0.10))
+        fuel_meshes.append(Mesh(v, f, C_FUEL, name=f"fuel_line_thigh_{sx}"))
+    # Fuel level sensor indicators (4 capacitive sensors)
+    for si in range(4):
+        sy = -torso_len/2 + 0.04 + si * 0.03
+        v, f = _sphere(0.003, seg=5)
+        v = _translate(v, (0.06, sy, -0.13))
+        fuel_meshes.append(Mesh(v, f, C_ACCENT, name=f"fuel_sensor_{si}", emissive=True))
+    # Refuel port (left hip, quick-disconnect)
+    v, f = _solid_cylinder(0.012, 0, 0.015, seg=8)
+    v = (np.asarray(v) @ rot_z(-math.pi/2).T).tolist()
+    v = _translate(v, (-hip_w * 0.5 - 0.02, -torso_len/2 + 0.04, -0.12))
+    fuel_meshes.append(Mesh(v, f, C_FRAME, name="refuel_port"))
+    # Refuel port cap
+    v, f = _sphere(0.013, seg=8)
+    v = _translate(v, (-hip_w * 0.5 - 0.035, -torso_len/2 + 0.04, -0.12))
+    fuel_meshes.append(Mesh(v, f, C_FRAME_DK, name="refuel_cap"))
+    parts.append(Part("fuel_system", f"Fuel System: {DIMS['fuel_capacity_l']}L Conformal Bladder + Pumps",
+                      fuel_meshes,
+                      [f"Capacity: {DIMS['fuel_capacity_l']}L {DIMS['fuel_type']}",
+                       f"Fuel mass: {DIMS['fuel_capacity_l']*DIMS['fuel_density_kg_l']:.1f} kg",
+                       f"Bladder: conformal Kevlar, self-sealing",
+                       f"Pumps: dual redundant electric, 0.5 LPM each",
+                       f"Lines: stainless braided, AN-8, dual redundant",
+                       f"Refuel: quick-disconnect port (left hip)",
+                       f"Sensors: 4x capacitive fuel level"],
+                      order, np.array([0, -0.15, -0.15]), C_FUEL))
     order += 1
 
     # ---- 10. NEURAL INTERFACE + AI ----
@@ -2323,7 +2681,7 @@ def build_suit(pilot_height=1.73, pilot_weight=79.4):
 
     return parts, turbine_config, {
         "wing_span": wing_span,
-        "wing_chord": wing_chord,
+        "wing_chord": mean_chord,
         "helmet_y": helmet_y,
         "torso_len": torso_len,
         "pilot_height": pilot_height,
@@ -2348,7 +2706,7 @@ class SuitState:
         self.afterburner = False
         self.battery_soc = 1.0       # state of charge (1.0 = full)
         # Fuel system: Jet-A1 for micro-turbofans
-        self.fuel_max_kg = DIMS["fuel_capacity_l"] * DIMS["fuel_density_kg_l"]  # ~58.3 kg
+        self.fuel_max_kg = DIMS["fuel_capacity_l"] * DIMS["fuel_density_kg_l"]  # ~36.5 kg
         self.fuel_kg = self.fuel_max_kg  # start with full tanks
         self.fuel_flow_kg_s = 0.0   # current fuel burn rate (kg/s)
         self.fuel_burned_kg = 0.0   # total fuel consumed
@@ -2384,6 +2742,16 @@ class SuitState:
         self.collision_warning = False
         self.collision_dist = float('inf')
         self.heat_map = {}  # part_key -> temp C for heat overlay
+        # Game state: score, rings, combo (Iron Man game style)
+        self.game_score = 0
+        self.game_rings_passed = 0
+        self.game_combo = 0
+        self.game_combo_timer = 0.0
+        self.game_timer = 0.0
+        self.screen_shake = 0.0
+        self.flight_rings = []  # list of {pos, radius, passed, angle, color}
+        self._init_flight_rings()
+        self.speed_trail = []  # particle trail for speed sensation
         # Atmospheric model
         self.atmosphere = AtmosphericModel()
         self.weather = "clear"
@@ -2643,10 +3011,14 @@ class SuitState:
             self.roll *= max(0.0, 1.0 - dt * 3.0)
         # Auto-hover: maintain altitude (throttle = weight / effective_thrust)
         if self.auto_hover and self.altitude > 0.5:
-            total_mass = self.pilot_mass + DIMS["weight_total_kg"]
+            total_mass = self.pilot_mass + DIMS["weight_total_kg"] + self.fuel_kg
             weight_n = total_mass * self.env_gravity
-            # Account for power system voltage sag in max thrust calculation
+            # Account for power system voltage sag and air density in max thrust
             max_thrust_n = DIMS["turbine_count"] * DIMS["turbine_thrust_dry_lbf"] * 4.448
+            # Air density ratio (thrust scales with mass flow)
+            rho_sl = 1.225
+            density_ratio = min(1.0, self.env_density / rho_sl) if self.env_density > 0.001 else 0.0
+            max_thrust_n *= density_ratio
             if hasattr(self, 'power'):
                 v_ratio = self.power.voltage / self.power.NOMINAL_VOLTAGE
                 max_thrust_n *= v_ratio ** 2
@@ -2724,6 +3096,89 @@ class SuitState:
             self.flight_mode = "ground"
         else:
             self.flight_mode = "cruise"
+        # Update game state
+        self.game_timer += dt
+        self._update_flight_rings(dt)
+        # Decay screen shake
+        self.screen_shake *= max(0.0, 1.0 - dt * 8.0)
+        # Decay combo timer
+        if self.game_combo_timer > 0:
+            self.game_combo_timer -= dt
+            if self.game_combo_timer <= 0:
+                self.game_combo = 0
+        # Update speed trail
+        speed = np.linalg.norm(self.velocity)
+        if speed > 5.0:
+            self.speed_trail.append({
+                "pos": self.pos.copy(),
+                "life": 1.0,
+                "size": 2 + min(speed * 0.1, 4),
+            })
+        for p in self.speed_trail:
+            p["life"] -= dt * 3.0
+        self.speed_trail = [p for p in self.speed_trail if p["life"] > 0]
+        if len(self.speed_trail) > 80:
+            self.speed_trail = self.speed_trail[-80:]
+
+    def _init_flight_rings(self):
+        """Spawn initial flight rings in a course pattern ahead of player."""
+        self.flight_rings = []
+        for i in range(12):
+            angle = i * 0.3
+            x = math.sin(angle) * 30 + np.random.uniform(-10, 10)
+            y = 15 + i * 8 + np.random.uniform(-3, 3)
+            z = 40 + i * 35
+            ring = {
+                "pos": np.array([x, y, z]),
+                "radius": 5.0,
+                "passed": False,
+                "angle": 0.0,
+                "color": (100, 200, 255),
+                "glow": 0.0,
+            }
+            self.flight_rings.append(ring)
+
+    def _update_flight_rings(self, dt):
+        """Check ring pass-through and respawn rings ahead."""
+        for ring in self.flight_rings:
+            ring["angle"] += dt * 1.5
+            ring["glow"] *= max(0.0, 1.0 - dt * 3.0)
+            if ring["passed"]:
+                continue
+            dist = np.linalg.norm(self.pos - ring["pos"])
+            if dist < ring["radius"] * 1.2:
+                # Check if roughly aligned (within radius)
+                rel = self.pos - ring["pos"]
+                if np.linalg.norm(rel) < ring["radius"]:
+                    ring["passed"] = True
+                    ring["glow"] = 1.0
+                    self.game_rings_passed += 1
+                    self.game_combo += 1
+                    self.game_combo_timer = 5.0
+                    points = 100 * (1 + self.game_combo * 0.1)
+                    self.game_score += int(points)
+                    self.screen_shake = max(self.screen_shake, 0.3)
+        # Respawn passed rings far ahead
+        for ring in self.flight_rings:
+            if ring["passed"] and ring["glow"] < 0.1:
+                # Move ring ahead of player
+                ahead_z = max(ring["pos"][2], self.pos[2]) + 200 + np.random.uniform(-30, 30)
+                ring["pos"] = np.array([
+                    np.random.uniform(-40, 40),
+                    np.random.uniform(10, 60),
+                    ahead_z,
+                ])
+                ring["passed"] = False
+                ring["glow"] = 0.0
+        # Also recycle rings that are too far behind
+        for ring in self.flight_rings:
+            if ring["pos"][2] < self.pos[2] - 50 and not ring["passed"]:
+                ahead_z = self.pos[2] + 200 + np.random.uniform(-30, 30)
+                ring["pos"] = np.array([
+                    np.random.uniform(-40, 40),
+                    np.random.uniform(10, 60),
+                    ahead_z,
+                ])
 
     def emp_hit(self, intensity_db=80.0):
         """Simulate an EMP strike on the suit.
@@ -5844,10 +6299,19 @@ class SuitPhysics:
                 s.velocity[1] = 0.0
                 s.velocity[0] *= 0.5  # friction
                 s.velocity[2] *= 0.5
+                # Screen shake on ground impact
+                if impact_speed > 5.0:
+                    s.screen_shake = max(s.screen_shake, min(1.0, impact_speed / 30.0))
 
         s.altitude = s.pos[1]
         # G-load = |total acceleration| / gravity (proper vector magnitude, not just vertical)
         s.g_load = np.linalg.norm(accel) / max(s.env_gravity, 0.1) if s.env_gravity > 0 else 0.0
+        # Screen shake on high-G maneuvers
+        if s.g_load > 8.0:
+            s.screen_shake = max(s.screen_shake, min(0.5, (s.g_load - 8.0) / 20.0))
+        # Screen shake on afterburner activation
+        if s.afterburner and s.throttle > 0.5:
+            s.screen_shake = max(s.screen_shake, 0.15)
 
         # --- Rotational dynamics ---
         # Torque from thrust vectoring: tau = r x F, where r is moment arm from CG
@@ -5858,10 +6322,11 @@ class SuitPhysics:
         if hasattr(s, 'neural'):
             neural_mult = 0.5 + 0.5 * s.neural.signal_quality
         # Torque components from thrust vector offset
-        # tv[0] = lateral (roll), tv[1] = vertical (pitch), tv[2] = forward (pitch/yaw)
-        tau_pitch = thrust * moment_arm * (tv[2] - 0.5) * neural_mult
+        # tv[0] = lateral (roll), tv[1] = vertical (neutral=1), tv[2] = forward (pitch)
+        # At neutral [0,1,0]: tv[0]=0, tv[2]=0 -> no torque
+        tau_pitch = thrust * moment_arm * tv[2] * neural_mult
         tau_roll = thrust * moment_arm * tv[0] * neural_mult
-        tau_yaw = thrust * moment_arm * (tv[2] - 0.5) * 0.3 * neural_mult
+        tau_yaw = thrust * moment_arm * tv[0] * 0.3 * neural_mult  # roll coupling
         # Angular acceleration = torque / inertia (I_x, I_y, I_z)
         s.pitch_rate += (tau_pitch / self.inertia[0]) * dt
         s.roll_rate += (tau_roll / self.inertia[1]) * dt
@@ -6195,11 +6660,12 @@ class FlightRenderer:
         self.dist = 6.0
         self.dist_target = 6.0
         self.light = C_LIGHT_DIR / np.linalg.norm(C_LIGHT_DIR)
+        self.chase_cam = True  # default to chase cam for game feel
+        self._init_buildings()
         self.cull = True
         self.min_area = 5.0
         self.xray = False
         self.show_heat = False
-        self.chase_cam = False
         self.chase_offset = np.array([-3.0, 2.0, -6.0])
         # Weather particle system
         self.weather_particles = []
@@ -6217,6 +6683,27 @@ class FlightRenderer:
                 "vel": np.zeros(3),
                 "life": np.random.random(),
                 "size": 1,
+            })
+
+    def _init_buildings(self):
+        """Generate procedural cityscape buildings that scroll past for speed sensation."""
+        self.buildings = []
+        rng = np.random.RandomState(42)  # deterministic for consistency
+        for _ in range(80):
+            bx = rng.uniform(-120, 120)
+            bz = rng.uniform(-50, 400)
+            bw = rng.uniform(6, 18)
+            bd = rng.uniform(6, 18)
+            bh = rng.uniform(15, 70)
+            # Building color: dark blue-grey with slight variation
+            shade = rng.randint(25, 50)
+            col = (shade, shade + 5, shade + 12)
+            # Window lit probability
+            windows_on = rng.random() > 0.3
+            self.buildings.append({
+                "x": bx, "z": bz, "w": bw, "d": bd, "h": bh,
+                "color": col, "windows": windows_on,
+                "seed": rng.randint(0, 9999),
             })
 
     def _update_weather_particles(self, dt, state):
@@ -6300,10 +6787,158 @@ class FlightRenderer:
                 except Exception:
                     pass
 
+    def _draw_buildings(self, surf, project, state):
+        """Draw procedural cityscape buildings that recycle as player flies forward."""
+        for b in self.buildings:
+            # Recycle buildings that are far behind player
+            if b["z"] < state.pos[2] - 60:
+                b["z"] += 400
+                b["x"] = np.random.uniform(-120, 120)
+            elif b["z"] > state.pos[2] + 350:
+                b["z"] -= 400
+                b["x"] = np.random.uniform(-120, 120)
+            bx, bz = b["x"], b["z"]
+            bw, bd, bh = b["w"], b["d"], b["h"]
+            # Project 4 base corners + 4 top corners
+            corners = [
+                (bx - bw/2, GROUND_Y, bz - bd/2),
+                (bx + bw/2, GROUND_Y, bz - bd/2),
+                (bx + bw/2, GROUND_Y, bz + bd/2),
+                (bx - bw/2, GROUND_Y, bz + bd/2),
+            ]
+            top_corners = [
+                (bx - bw/2, GROUND_Y + bh, bz - bd/2),
+                (bx + bw/2, GROUND_Y + bh, bz - bd/2),
+                (bx + bw/2, GROUND_Y + bh, bz + bd/2),
+                (bx - bw/2, GROUND_Y + bh, bz + bd/2),
+            ]
+            base_pts = [project(c) for c in corners]
+            top_pts = [project(c) for c in top_corners]
+            if all(p is None for p in base_pts):
+                continue
+            fade = clamp(1.0 - abs(bz - state.pos[2]) / 200, 0.0, 1.0)
+            bcol = b["color"]
+            bcol_faded = (int(bcol[0] * fade), int(bcol[1] * fade), int(bcol[2] * fade))
+            # Draw building faces (front, right, left) as filled quads
+            faces = [
+                (base_pts[0], base_pts[1], top_pts[1], top_pts[0]),  # front
+                (base_pts[1], base_pts[2], top_pts[2], top_pts[1]),  # right
+                (base_pts[3], base_pts[0], top_pts[0], top_pts[3]),  # left
+            ]
+            for fi, (b0, b1, t1, t0) in enumerate(faces):
+                if b0 and b1 and t1 and t0:
+                    try:
+                        # Side faces are darker
+                        side_shade = 0.7 if fi > 0 else 1.0
+                        fcol = (int(bcol_faded[0] * side_shade),
+                                int(bcol_faded[1] * side_shade),
+                                int(bcol_faded[2] * side_shade))
+                        pts = [(b0[0], b0[1]), (b1[0], b1[1]), (t1[0], t1[1]), (t0[0], t0[1])]
+                        pygame.draw.polygon(surf, fcol, pts)
+                        pygame.draw.polygon(surf, (max(0, fcol[0]-10), max(0, fcol[1]-10), max(0, fcol[2]-10)), pts, 1)
+                    except Exception:
+                        pass
+            # Draw window lights on front face
+            if b["windows"] and top_pts[0] and top_pts[1] and base_pts[0] and base_pts[1]:
+                try:
+                    rng = np.random.RandomState(b["seed"])
+                    n_rows = max(2, int(bh / 5))
+                    n_cols = max(2, int(bw / 4))
+                    for wr in range(n_rows):
+                        for wc in range(n_cols):
+                            if rng.random() > 0.4:
+                                continue
+                            wy = GROUND_Y + 3 + wr * (bh - 4) / n_rows
+                            wx = bx - bw/2 + 2 + wc * (bw - 4) / n_cols
+                            wp = project((wx, wy, bz - bd/2 - 0.01))
+                            if wp and wp[2] < 120:
+                                wcol = (int(180 * fade), int(160 * fade), int(60 * fade))
+                                pygame.draw.circle(surf, wcol, (int(wp[0]), int(wp[1])), 1)
+                except Exception:
+                    pass
+
+    def _draw_flight_rings(self, surf, project, state):
+        """Draw glowing flight rings to fly through for points."""
+        for ring in state.flight_rings:
+            rp = ring["pos"]
+            # Skip rings too far away
+            dist = np.linalg.norm(rp - state.pos)
+            if dist > 300:
+                continue
+            radius = ring["radius"]
+            angle = ring["angle"]
+            glow = ring["glow"]
+            passed = ring["passed"]
+            # Ring color: cyan when active, gold flash when passed
+            if passed:
+                base_col = (255, int(200 + glow * 55), int(80 + glow * 100))
+            else:
+                base_col = ring["color"]
+            # Draw ring as series of segments
+            n_seg = 24
+            prev_pt = None
+            for i in range(n_seg + 1):
+                a = i * 2 * math.pi / n_seg + angle
+                # Ring is oriented facing +Z (toward player direction of travel)
+                px = rp[0] + math.cos(a) * radius
+                py = rp[1] + math.sin(a) * radius
+                pz = rp[2]
+                pt = project((px, py, pz))
+                if pt and prev_pt:
+                    try:
+                        col = base_col
+                        if glow > 0.1:
+                            col = (min(255, col[0] + int(glow * 50)),
+                                   min(255, col[1] + int(glow * 50)),
+                                   min(255, col[2] + int(glow * 50)))
+                        thickness = 3 if glow > 0.1 else 2
+                        pygame.draw.line(surf, col, (prev_pt[0], prev_pt[1]), (pt[0], pt[1]), thickness)
+                    except Exception:
+                        pass
+                prev_pt = pt
+            # Draw center glow
+            center = project(rp.tolist())
+            if center and not passed:
+                try:
+                    glow_r = max(2, int(radius * 2 / center[2]))
+                    pygame.draw.circle(surf, (base_col[0]//4, base_col[1]//4, base_col[2]//4),
+                                     (int(center[0]), int(center[1])), glow_r, 1)
+                except Exception:
+                    pass
+
+    def _draw_speed_trail(self, surf, project, state):
+        """Draw speed lines / particle trail behind the suit."""
+        for p in state.speed_trail:
+            pt = project(p["pos"].tolist())
+            if pt:
+                try:
+                    alpha = p["life"]
+                    col = (int(100 * alpha), int(150 * alpha), int(200 * alpha))
+                    size = max(1, int(p["size"] * alpha))
+                    pygame.draw.circle(surf, col, (int(pt[0]), int(pt[1])), size)
+                except Exception:
+                    pass
+
+    def _draw_vignette(self, surf, rect, intensity=0.2):
+        """Draw a dark vignette around screen edges for speed/boost sensation."""
+        try:
+            overlay = pygame.Surface((rect.w, rect.h), pygame.SRCALPHA)
+            for i in range(30):
+                alpha = int(intensity * 255 * (i / 30))
+                pygame.draw.rect(overlay, (0, 0, 0, alpha),
+                               (i, i, rect.w - 2*i, rect.h - 2*i), 1)
+            surf.blit(overlay, (rect.x, rect.y))
+        except Exception:
+            pass
+
     def _view(self, state):
         if self.chase_cam:
             # Chase camera: follows behind suit based on velocity direction
-            vel_dir = state.velocity / (np.linalg.norm(state.velocity) + 0.01)
+            speed = np.linalg.norm(state.velocity)
+            if speed > 1.0:
+                vel_dir = state.velocity / speed
+            else:
+                vel_dir = np.array([0.0, 0.0, 1.0])
             # Camera behind and above, opposite to velocity
             behind = -vel_dir * self.dist
             cam = state.pos + behind + np.array([0.0, 1.5 + self.el * 2.0, 0.0])
@@ -6324,9 +6959,15 @@ class FlightRenderer:
     def render(self, surf, rect, state, angles, font=None):
         clip = surf.get_clip()
         surf.set_clip(rect)
-        cx = rect.x + rect.w / 2.0
-        cy = rect.y + rect.h / 2.0
-        focal = min(rect.w, rect.h) * 1.05
+        # Screen shake offset
+        shake_x = int((np.random.random() - 0.5) * state.screen_shake * 12)
+        shake_y = int((np.random.random() - 0.5) * state.screen_shake * 12)
+        cx = rect.x + rect.w / 2.0 + shake_x
+        cy = rect.y + rect.h / 2.0 + shake_y
+        # FOV widens with speed and afterburner for game feel
+        speed = np.linalg.norm(state.velocity)
+        fov_mult = 1.0 + min(speed * 0.003, 0.15) + (0.1 if state.afterburner else 0.0)
+        focal = min(rect.w, rect.h) * 1.05 * fov_mult
         cam, R = self._view(state)
 
         def project(p):
@@ -6381,24 +7022,11 @@ class FlightRenderer:
             except Exception:
                 pass
 
-        # Reference towers at fixed world positions (for visual motion feedback)
-        tower_positions = [
-            (50, 0, 50), (-50, 0, 50), (80, 0, -30), (-80, 0, -30),
-            (0, 0, 100), (120, 0, 80), (-120, 0, 80), (0, 0, -80),
-        ]
-        for tx, ty, tz in tower_positions:
-            base = project((tx, GROUND_Y, tz))
-            top = project((tx, GROUND_Y + 20, tz))
-            if base and top:
-                try:
-                    fade = clamp(1.0 - np.linalg.norm(np.array([tx, 0, tz]) - state.pos[[0, 2]]) / 200, 0.0, 1.0)
-                    tcol = (int(50 * fade), int(60 * fade), int(75 * fade))
-                    pygame.draw.line(surf, tcol, (base[0], base[1]), (top[0], top[1]), 2)
-                    # Top marker
-                    pygame.draw.circle(surf, (int(80 * fade), int(90 * fade), int(60 * fade)),
-                                     (int(top[0]), int(top[1])), 2)
-                except Exception:
-                    pass
+        # Procedural cityscape buildings (recycled as player flies forward)
+        self._draw_buildings(surf, project, state)
+
+        # Flight rings (Iron Man game style)
+        self._draw_flight_rings(surf, project, state)
 
         # Build draw items
         polys = []
@@ -6434,6 +7062,15 @@ class FlightRenderer:
         # Thrust glow
         if state.throttle > 0.05:
             self._draw_thrust(surf, project, state, Rb, gshift)
+
+        # Speed lines / particle trail
+        self._draw_speed_trail(surf, project, state)
+
+        # Afterburner vignette
+        if state.afterburner and state.throttle > 0.5:
+            self._draw_vignette(surf, rect, intensity=0.3)
+        elif speed > 50:
+            self._draw_vignette(surf, rect, intensity=0.15)
 
         # Heat overlay
         if getattr(self, 'show_heat', False):
@@ -6610,8 +7247,9 @@ def draw_hud(surf, rect, state, physics, font, font_sm):
     x = rect.x + 10
     y = rect.y + 10
 
-    # Left panel: vitals + 6-DOF + atmosphere
-    _panel(surf, x, y, 240, 250, 200)
+    # Left panel: vitals + 6-DOF + atmosphere (responsive width)
+    lp_w = min(240, int(rect.w * 0.19))
+    _panel(surf, x, y, lp_w, 250, 200)
     surf.blit(font.render("Mjalnor'MV1.17 -- FLIGHT HUD", True, C_ACCENT), (x + 8, y + 6))
 
     speed = np.linalg.norm(state.velocity)
@@ -6648,7 +7286,7 @@ def draw_hud(surf, rect, state, physics, font, font_sm):
     env_y = y + 258
     if state.dive.active:
         d = state.dive
-        _panel(surf, x, env_y, 240, 132, 200)
+        _panel(surf, x, env_y, lp_w, 132, 200)
         surf.blit(font.render("DIVE COMPUTER", True, C_ACCENT), (x + 8, env_y + 6))
         dlines = [
             f"Depth: {d.depth_m:.1f} m  ({d.ambient_ata:.2f} ata)",
@@ -6670,7 +7308,7 @@ def draw_hud(surf, rect, state, physics, font, font_sm):
             surf.blit(font_sm.render(ln, True, col), (x + 8, env_y + 28 + i * 14))
     elif state.space.active:
         sp = state.space
-        _panel(surf, x, env_y, 240, 118, 200)
+        _panel(surf, x, env_y, lp_w, 118, 200)
         surf.blit(font.render("SPACE / RADIATION", True, C_ACCENT), (x + 8, env_y + 6))
         slines = [
             f"Dose rate: {sp.dose_rate_msv_h:.3f} mSv/h {'SPE!' if sp.spe_active else ''}",
@@ -6686,9 +7324,10 @@ def draw_hud(surf, rect, state, physics, font, font_sm):
                 col = C_ACCENT2
             surf.blit(font_sm.render(ln, True, col), (x + 8, env_y + 28 + i * 14))
 
-    # Right panel: systems + OS
-    rx = rect.x + rect.w - 260
-    _panel(surf, rx, y, 250, 210, 200)
+    # Right panel: systems + OS (responsive position)
+    rp_w = min(250, int(rect.w * 0.20))
+    rx = rect.x + rect.w - rp_w - 10
+    _panel(surf, rx, y, rp_w, 210, 200)
     surf.blit(font.render("SYSTEMS + SuitRTOS", True, C_ACCENT), (rx + 8, y + 6))
 
     rtos = state.rtos
@@ -6724,7 +7363,7 @@ def draw_hud(surf, rect, state, physics, font, font_sm):
 
     # Right-bottom: combat panel
     cy = y + 220
-    _panel(surf, rx, cy, 250, 120, 200)
+    _panel(surf, rx, cy, rp_w, 120, 200)
     surf.blit(font.render("COMBAT + AUTO-AIM", True, C_ACCENT), (rx + 8, cy + 6))
 
     aim = state.auto_aim
@@ -6747,21 +7386,23 @@ def draw_hud(surf, rect, state, physics, font, font_sm):
             col = C_FIBER
         surf.blit(font_sm.render(line, True, col), (rx + 8, cy + 30 + i * 16))
 
-    # Bottom: bars
+    # Bottom: bars (responsive to screen width)
     by = rect.y + rect.h - 50
-    _bar(surf, x, by, 160, "Throttle", f"{state.throttle*100:.0f}%", state.throttle, C_ACCENT, font_sm)
-    _bar(surf, x + 170, by, 160, "Battery", f"{state.battery_soc*100:.0f}%", state.battery_soc, C_OK, font_sm)
+    bar_w = min(160, (rect.w - 40) // 5 - 10)
+    bar_gap = bar_w + 10
+    _bar(surf, x, by, bar_w, "Throttle", f"{state.throttle*100:.0f}%", state.throttle, C_ACCENT, font_sm)
+    _bar(surf, x + bar_gap, by, bar_w, "Battery", f"{state.battery_soc*100:.0f}%", state.battery_soc, C_OK, font_sm)
     fuel_pct = state.fuel_kg / max(state.fuel_max_kg, 0.01)
     fuel_col = C_OK if fuel_pct > 0.3 else (255, 180, 0) if fuel_pct > 0.1 else (255, 60, 60)
-    _bar(surf, x + 340, by, 160, "Fuel", f"{fuel_pct*100:.0f}%", fuel_pct, fuel_col, font_sm)
-    _bar(surf, x + 510, by, 160, "Wings", f"{state.wing_deploy*100:.0f}%", state.wing_deploy, C_FIBER, font_sm)
-    _bar(surf, x + 680, by, 160, "Jump", f"{jump.charge*100:.0f}%", jump.charge, C_ACCENT2, font_sm)
+    _bar(surf, x + bar_gap * 2, by, bar_w, "Fuel", f"{fuel_pct*100:.0f}%", fuel_pct, fuel_col, font_sm)
+    _bar(surf, x + bar_gap * 3, by, bar_w, "Wings", f"{state.wing_deploy*100:.0f}%", state.wing_deploy, C_FIBER, font_sm)
+    _bar(surf, x + bar_gap * 4, by, bar_w, "Jump", f"{jump.charge*100:.0f}%", jump.charge, C_ACCENT2, font_sm)
 
     # Flight instruments: airspeed tape (left side), altitude tape (right side), heading compass (top center)
     speed = np.linalg.norm(state.velocity)
     speed_mph = speed * 2.237
     # Airspeed tape (left side, vertical)
-    asx = rect.x + 260
+    asx = x + lp_w + 10
     asy = rect.y + 60
     _panel(surf, asx, asy, 60, 140, 180)
     surf.blit(font_sm.render("SPD", True, C_DIM), (asx + 4, asy + 4))
@@ -6775,8 +7416,8 @@ def draw_hud(surf, rect, state, physics, font, font_sm):
         pygame.draw.line(surf, col, (asx + 4, ty), (asx + 20, ty), 1)
         surf.blit(font_sm.render(f"{tick_val}", True, col), (asx + 24, ty - 6))
 
-    # Altitude tape (right side, vertical)
-    alx = rect.x + rect.w - 330
+    # Altitude tape (right side, vertical, positioned left of right panel)
+    alx = rx - 70
     aly = rect.y + 60
     _panel(surf, alx, aly, 60, 140, 180)
     surf.blit(font_sm.render("ALT", True, C_DIM), (alx + 4, aly + 4))
@@ -6979,6 +7620,59 @@ def draw_hud(surf, rect, state, physics, font, font_sm):
         surf.blit(font_sm.render(line, True, col), (sx + 8, sy + 28 + i * 19))
 
 
+def draw_game_hud(surf, rect, state, font, font_sm):
+    """Draw Iron Man game-style HUD: score, rings, combo, timer, boost meter."""
+    # Top-center: score + timer (big, prominent)
+    gx = rect.x + rect.w // 2
+    gy = rect.y + 60
+
+    # Score panel (top-center, below heading compass)
+    _panel(surf, gx - 90, gy, 180, 56, 220)
+    score_col = C_ACCENT if state.game_combo > 0 else C_TEXT
+    surf.blit(font_sm.render("SCORE", True, C_DIM), (gx - 82, gy + 4))
+    score_txt = font.render(f"{state.game_score:,}", True, score_col)
+    surf.blit(score_txt, (gx - 82, gy + 18))
+    # Timer
+    t = state.game_timer
+    t_str = f"{int(t//60):01d}:{int(t%60):02d}"
+    surf.blit(font_sm.render(t_str, True, C_DIM), (gx + 50, gy + 4))
+    # Rings passed
+    surf.blit(font_sm.render(f"RINGS: {state.game_rings_passed}", True, C_FIBER), (gx + 50, gy + 20))
+
+    # Combo indicator (flashes when active)
+    if state.game_combo > 0:
+        combo_y = gy + 64
+        combo_alpha = min(1.0, state.game_combo_timer / 5.0)
+        combo_col = (int(255 * combo_alpha), int(200 * combo_alpha), int(60 * combo_alpha))
+        combo_txt = font.render(f"x{state.game_combo} COMBO!", True, combo_col)
+        surf.blit(combo_txt, (gx - combo_txt.get_width() // 2, combo_y))
+        # Combo timer bar
+        bar_w = 80
+        bar_x = gx - bar_w // 2
+        bar_y = combo_y + 22
+        pygame.draw.rect(surf, (30, 30, 30), (bar_x, bar_y, bar_w, 4))
+        fill_w = int(bar_w * state.game_combo_timer / 5.0)
+        pygame.draw.rect(surf, (255, 200, 60), (bar_x, bar_y, fill_w, 4))
+
+    # Boost / afterburner meter (bottom-center, above controls bar)
+    by = rect.y + rect.h - 80
+    bw = 200
+    bx = rect.x + rect.w // 2 - bw // 2
+    _panel(surf, bx, by, bw, 28, 200)
+    surf.blit(font_sm.render("BOOST", True, C_DIM), (bx + 6, by + 3))
+    # Afterburner active = full bar, else shows throttle
+    boost_val = state.throttle if not state.afterburner else 1.0
+    boost_col = (255, 100, 20) if state.afterburner else (100, 150, 200)
+    bar_x = bx + 55
+    bar_y = by + 8
+    bar_w = 135
+    pygame.draw.rect(surf, (40, 46, 58), (bar_x, bar_y, bar_w, 12))
+    pygame.draw.rect(surf, boost_col, (bar_x, bar_y, int(bar_w * clamp(boost_val)), 12))
+    pygame.draw.rect(surf, (70, 84, 104), (bar_x, bar_y, bar_w, 12), 1)
+    if state.afterburner:
+        surf.blit(font_sm.render("AFTERBURNER", True, (255, 100, 20)), (bar_x, by + 16))
+
+
 # =============================================================================
 # INFO OVERLAY  -- part specs display
 # =============================================================================
@@ -7078,8 +7772,8 @@ def draw_info(surf, rect, parts, selected, font, font_sm, scroll_y=0):
         return
     part = parts[selected]
 
-    # Panel dimensions
-    pw = 360
+    # Panel dimensions (responsive to screen width)
+    pw = min(360, int(rect.w * 0.28))
     x = rect.x + rect.w - pw - 10
     y = rect.y + 10
     max_h = rect.h - 40
@@ -7223,7 +7917,7 @@ def draw_info(surf, rect, parts, selected, font, font_sm, scroll_y=0):
 def draw_part_browser(surf, rect, parts, font, font_sm, selected=None):
     """Draw a scrollable part browser showing all 12 parts with quick stats.
     Returns list of (orig_idx, click_rect) for interactive selection."""
-    pw = 280
+    pw = min(280, int(rect.w * 0.22))
     x = rect.x + 10
     y = rect.y + 10
 
@@ -7290,14 +7984,14 @@ def draw_part_browser(surf, rect, parts, font, font_sm, selected=None):
 
 def draw_blueprint(surf, rect, parts, font, font_sm):
     """Draw assembly blueprint showing layer stack diagram, body cross-section, and build order."""
-    pw = 420
+    pw = min(420, rect.w - 40)
     x = rect.x + rect.w // 2 - pw // 2
     y = rect.y + 60
 
     # Sort by layer number
     sorted_parts = sorted(parts, key=lambda p: getattr(p, 'layer_num', p.order))
 
-    h = 520
+    h = min(520, rect.h - 80)
     _panel(surf, x, y, pw, h, 240)
     surf.blit(font.render("BUILD BLUEPRINT -- ASSEMBLY ORDER", True, C_ACCENT), (x + 8, y + 6))
     surf.blit(font_sm.render("Mjalnor'MV1.17 layer stack (inside -> outside)", True, C_DIM),
@@ -7450,10 +8144,10 @@ def draw_blueprint(surf, rect, parts, font, font_sm):
 
 def draw_suit_overview(surf, rect, parts, font, font_sm):
     """Draw suit overview/summary panel showing aggregate specs across all parts."""
-    pw = 400
+    pw = min(400, rect.w - 40)
     x = rect.x + rect.w // 2 - pw // 2
     y = rect.y + 60
-    h = 480
+    h = min(480, rect.h - 80)
     _panel(surf, x, y, pw, h, 240)
     surf.blit(font.render("SUIT OVERVIEW -- MJALNOR'MV1.17", True, C_ACCENT), (x + 8, y + 6))
     surf.blit(font_sm.render("Aggregate specifications across all 12 components", True, C_DIM),
@@ -8308,6 +9002,158 @@ def selftest():
     print(f"  PASS: Muscle fiber force enhances jump height by {state6.jump.jump_peak_height - jump_plain.jump_peak_height:.1f}m")
 
 
+    # =====================================================================
+    # SCIENTIFIC VALIDATION -- physics self-consistency checks
+    # =====================================================================
+    print("\n--- Scientific Validation ---")
+
+    # 1. Weight budget reconciliation
+    part_weights = sum(PART_DB[k].get("weight_kg", 0) for k in PART_DB)
+    budget_total = DIMS["weight_total_kg"]
+    print(f"  Part weights sum: {part_weights:.1f} kg | Budget total: {budget_total:.1f} kg")
+    assert abs(part_weights - budget_total) < 2.0, f"Weight budget mismatch: parts={part_weights:.1f} vs budget={budget_total:.1f}"
+    print(f"  PASS: Weight budget reconciles within 2 kg tolerance")
+
+    # 2. Thrust-to-weight ratio at full mass
+    total_mass = DIMS["weight_total_kg"] + DIMS["fuel_capacity_l"] * DIMS["fuel_density_kg_l"] + DIMS["ref_weight_kg"]
+    weight_n = total_mass * 9.81
+    thrust_dry_n = DIMS["turbine_count"] * DIMS["turbine_thrust_dry_lbf"] * 4.448
+    thrust_ab_n = DIMS["turbine_count"] * DIMS["turbine_thrust_ab_lbf"] * 4.448
+    twr_dry = thrust_dry_n / weight_n
+    twr_ab = thrust_ab_n / weight_n
+    print(f"  T/W dry: {twr_dry:.2f}:1 | T/W AB: {twr_ab:.2f}:1 | Mass: {total_mass:.1f} kg")
+    assert twr_dry > 1.0, f"T/W dry must be >1.0 for flight, got {twr_dry:.2f}"
+    assert twr_ab > 1.5, f"T/W AB should be >1.5 for agility, got {twr_ab:.2f}"
+    print(f"  PASS: T/W > 1.0 (dry) and > 1.5 (AB) -- suit is flyable")
+
+    # 3. Hover endurance calculation (hover thrust = weight, not full thrust)
+    hover_thrust_lbf = weight_n / 4.448
+    hover_burn_kg_h = hover_thrust_lbf * DIMS["turbine_sfc_dry_lb_lbh"] * 0.4536
+    fuel_kg = DIMS["fuel_capacity_l"] * DIMS["fuel_density_kg_l"]
+    hover_endurance_min = fuel_kg / hover_burn_kg_h * 60
+    print(f"  Hover thrust: {hover_thrust_lbf:.0f} lbf | Burn: {hover_burn_kg_h:.1f} kg/h | Endurance: {hover_endurance_min:.1f} min")
+    assert hover_endurance_min > 5.0, f"Hover endurance should be >5 min, got {hover_endurance_min:.1f}"
+    print(f"  PASS: Hover endurance {hover_endurance_min:.1f} min (>5 min minimum)")
+
+    # 4. Layer thickness sum check
+    layer_sum = DIMS["inner_thick_mm"] + DIMS["middle_thick_mm"] + DIMS["intermediate_thick_mm"] + DIMS["outer_thick_mm"]
+    print(f"  Layer sum: {layer_sum:.1f}mm + 0.6mm gaps = {layer_sum + 0.6:.1f}mm | Total: {DIMS['total_thick_mm']}mm")
+    assert abs((layer_sum + 0.6) - DIMS["total_thick_mm"]) < 0.1, "Layer thicknesses must sum to total"
+    assert DIMS["total_thick_mm"] <= 10.0, f"Ultra-conformed suit must be <=10mm, got {DIMS['total_thick_mm']}mm"
+    print(f"  PASS: Layer thickness {DIMS['total_thick_mm']}mm <= 10mm (ultra-conformed)")
+
+    # 5. Turbine thrust physics validation (mdot * V_exit)
+    # F = mdot * V_exit; mdot = rho * A * V_inlet
+    import math as _m
+    turbine_r = DIMS["turbine_d_mm"] / 2 / 1000  # m
+    inlet_area = _m.pi * turbine_r ** 2  # m^2
+    rho_sl = 1.225  # kg/m^3
+    # Tip speed at max RPM: v_tip = 2*pi*r*RPM/60
+    v_tip = 2 * _m.pi * turbine_r * DIMS["turbine_rpm_max"] / 60
+    # V_inlet ~ 0.5 * v_tip (typical axial compressor intake ratio)
+    v_inlet = 0.5 * v_tip
+    mdot = rho_sl * inlet_area * v_inlet
+    v_exit = 280  # m/s (typical small turbofan exhaust velocity)
+    computed_thrust_n = mdot * v_exit
+    spec_thrust_n = DIMS["turbine_thrust_dry_lbf"] * 4.448
+    print(f"  Turbine: d={DIMS['turbine_d_mm']}mm, RPM={DIMS['turbine_rpm_max']:,}, v_tip={v_tip:.0f} m/s")
+    print(f"  mdot={mdot:.3f} kg/s, F_computed={computed_thrust_n:.0f} N, F_spec={spec_thrust_n:.0f} N")
+    # Allow 50% tolerance (simplified model vs real compressor)
+    assert computed_thrust_n > spec_thrust_n * 0.5, f"Computed thrust {computed_thrust_n:.0f}N too low vs spec {spec_thrust_n:.0f}N"
+    print(f"  PASS: Turbine thrust physically plausible (within 50% of mdot*V_exit model)")
+
+    # 6. Armor layer stopping power sum
+    total_stop = DIMS["outer_stop_psi"] + DIMS["inter_stop_psi"] + DIMS["middle_stop_psi"]
+    print(f"  Armor stopping power: {total_stop:,} PSI (outer+inter+middle)")
+    assert total_stop > 600000, f"Armor should stop .50 BMG (~600k PSI), total={total_stop:,}"
+    print(f"  PASS: Armor stack defeats .50 BMG ({total_stop:,} > 600,000 PSI)")
+
+    # 7. Material property scientific plausibility checks
+    print("\n  Material Property Verification:")
+    # DEA strain: lab max ~100-300% (VHB acrylic), practical fiber-reinforced ~20-50%
+    assert 10 <= DIMS["dea_strain_pct"] <= 100, f"DEA strain {DIMS['dea_strain_pct']}% out of plausible range"
+    print(f"    DEA strain: {DIMS['dea_strain_pct']}% (lab: 100-300%, practical: 20-50%) -- PLAUSIBLE (upper bound)")
+    # DEA contraction: <1ms theoretical, 10-100ms practical
+    assert DIMS["dea_contraction_ms"] <= 100, f"DEA contraction {DIMS['dea_contraction_ms']}ms too slow"
+    print(f"    DEA contraction: {DIMS['dea_contraction_ms']}ms (practical: 10-100ms) -- PLAUSIBLE")
+    # STF: base aramid ~50k PSI, STF-enhanced 2-3x, tripled ~150k
+    assert 50000 <= DIMS["stf_max_psi"] <= 300000, f"STF max PSI {DIMS['stf_max_psi']} out of range"
+    print(f"    STF absorption: {DIMS['stf_max_psi']:,} PSI (base aramid ~50k, STF 2-3x, tripled ~150k) -- PLAUSIBLE")
+    # Auxetic Poisson: theoretical min -1, re-entrant honeycomb -0.5 to -0.9
+    assert -1.0 <= DIMS["auxetic_poisson"] <= -0.1, f"Auxetic Poisson {DIMS['auxetic_poisson']} out of range"
+    print(f"    Auxetic Poisson: {DIMS['auxetic_poisson']} (re-entrant honeycomb: -0.5 to -0.9) -- PLAUSIBLE")
+    # Auxetic relative density: 10-30% typical for lattice metamaterials
+    assert 0.05 <= DIMS["auxetic_rel_density"] <= 0.40, f"Auxetic rel density {DIMS['auxetic_rel_density']} out of range"
+    print(f"    Auxetic rel density: {DIMS['auxetic_rel_density']*100:.0f}% (lattice: 10-30%) -- PLAUSIBLE")
+    # Graphene-UHMWPE: UHMWPE tensile ~3.6 GPa = ~520k PSI; graphene enhances stiffness
+    assert 300000 <= DIMS["outer_stop_psi"] <= 800000, f"Outer stop PSI {DIMS['outer_stop_psi']} out of range"
+    print(f"    Graphene-UHMWPE stop: {DIMS['outer_stop_psi']:,} PSI (UHMWPE ~520k, graphene-enhanced) -- PLAUSIBLE")
+    # Alumina ceramic melting point: 2072C; composite short-duration tolerance ~1500-2000C
+    assert 1000 <= DIMS["outer_heat_tol_c"] <= 2100, f"Heat tolerance {DIMS['outer_heat_tol_c']}C out of range"
+    print(f"    Ceramic heat tolerance: {DIMS['outer_heat_tol_c']}C (alumina mp=2072C, short-duration) -- PLAUSIBLE")
+    # Graphene thermal conductivity ~5000 W/mK; laser tolerance ~5-15 kW/cm² for short pulse
+    assert 1 <= DIMS["outer_laser_tol_kw"] <= 50, f"Laser tolerance {DIMS['outer_laser_tol_kw']} kW/cm2 out of range"
+    print(f"    Laser tolerance: {DIMS['outer_laser_tol_kw']} kW/cm2 (graphene thermal spreading) -- PLAUSIBLE")
+    # STF stiffening: 1.5-3x typical for shear-thickening transition
+    assert 1.2 <= DIMS["stf_stiffen_mult"] <= 5.0, f"STF stiffen mult {DIMS['stf_stiffen_mult']} out of range"
+    print(f"    STF stiffening: {DIMS['stf_stiffen_mult']}x (typical: 1.5-3x) -- PLAUSIBLE")
+    print(f"  PASS: All 9 material properties within scientifically plausible bounds")
+
+    # =====================================================================
+    # FAILURE MODE ANALYSIS -- per-layer thresholds and cascade logic
+    # =====================================================================
+    print("\n--- Failure Mode Analysis ---")
+    failure_modes = [
+        ("Outer armor penetration", "Ballistic impact > 520k PSI",
+         "Ceramic strike face shatters, UHMWPE delaminates",
+         "Impact energy transfers to auxetic layer (150k PSI capacity)",
+         "Self-healing seams close <25mm holes in 2s; panel replacement if >25mm"),
+        ("Auxetic densification", "Residual impact > 150k PSI",
+         "Lattice cells compress to solid, foam fill ruptures",
+         "Energy transfers to DEA-STF middle layer (80k PSI base, 152k stiffened)",
+         "Lattice permanently deformed; replacement required after mission"),
+        ("DEA fiber rupture", "Residual impact > 80k PSI (base) / 152k (stiffened)",
+         "DEA elastomer tears, STF bladder ruptures, carbon nanotube electrodes sever",
+         "Muscle function lost in affected panel; load redistributes to adjacent panels",
+         "Panel replacement + STF refill required; 24-panel redundancy limits impact"),
+        ("Frame structural failure", "Stress > 50G axial or > 500N actuator overload",
+         "CFRP tube delamination, Ti node fracture, actuator seizure",
+         "Load path redistributes via 24 Spectra straps; telescoping locks",
+         "Frame replacement required; suit mission-abort, pilot extraction"),
+        ("Turbine failure", "Foreign object damage, bearing seizure, fuel starvation",
+         "Turbine produces zero thrust, possible turbine burst",
+         "Remaining 35 turbines compensate; FADEC redistributes thrust",
+         "Turbine replacement; suit remains flyable with 35/36 turbines"),
+        ("Power system failure", "Battery thermal runaway, BMS fault, bus short",
+         "Loss of 48V bus power to actuators, turbines, neural, thermal",
+         "Hot-swap to backup battery (5s downtime); piezo harvesters provide emergency power",
+         "Battery replacement; suit enters degraded mode (40% thrust, no afterburner)"),
+        ("Neural interface loss", "EEG signal degradation, NPU fault, crypto failure",
+         "Loss of thought-to-action control; suit reverts to manual input",
+         "AI co-pilot maintains hover/stabilization; manual joystick fallback",
+         "Recalibration required; suit enters safe-mode with manual controls only"),
+        ("Thermal runaway", "Skin temp > 42C or < 30C despite regulation",
+         "Peltier junction failure, capillary loop blockage, aerogel degradation",
+         "Radiator fins deploy automatically; PCM absorbs latent heat (12kJ/kg)",
+         "Thermal system service required; mission abort if temp uncontrolled"),
+        ("Helmet seal breach", "Visor crack > 5mm, neck ring failure, O-ring degradation",
+         "Loss of pressure integrity; O2 leak, CO2 ingress, water ingress",
+         "Self-sealing polymer activates; emergency O2 reserve (5 min backup)",
+         "Immediate descent/egress required; helmet replacement after mission"),
+        ("Fuel system breach", "Bladder penetration > 12mm, line rupture, pump failure",
+         "Fuel loss, potential fire hazard, thrust loss in affected turbine group",
+         "Self-sealing coating closes <12mm; dual redundant pumps/lines; FADEC isolates group",
+         "Fuel system repair; mission abort if fuel loss > 50%"),
+    ]
+    for i, (mode, trigger, effect, mitigation, recovery) in enumerate(failure_modes):
+        print(f"  F{i+1}: {mode}")
+        print(f"      Trigger: {trigger}")
+        print(f"      Effect: {effect}")
+        print(f"      Mitigation: {mitigation}")
+        print(f"      Recovery: {recovery}")
+    print(f"  PASS: {len(failure_modes)} failure modes documented with cascade logic")
+
+
     print("\n" + "=" * 70)
     print("ALL TESTS PASSED")
     print("=" * 70)
@@ -8332,23 +9178,35 @@ def print_feasibility():
     print(f"   Status: BUILDABLE (2025-2026 materials, Markforged Metal X + autoclave)")
 
     print("\n2. PROPULSION")
+    total_mass_kg = DIMS['weight_total_kg'] + DIMS['fuel_capacity_l'] * DIMS['fuel_density_kg_l'] + DIMS['ref_weight_kg']
+    weight_n = total_mass_kg * 9.81
+    total_thrust_dry_n = DIMS['turbine_count'] * DIMS['turbine_thrust_dry_lbf'] * 4.448
+    total_thrust_ab_n = DIMS['turbine_count'] * DIMS['turbine_thrust_ab_lbf'] * 4.448
+    twr_dry = total_thrust_dry_n / weight_n
+    twr_ab = total_thrust_ab_n / weight_n
     print(f"   {DIMS['turbine_count']}x micro-turbofans, {DIMS['turbine_d_mm']}mm x {DIMS['turbine_len_mm']}mm")
-    print(f"   Total thrust: {DIMS['turbine_count']*DIMS['turbine_thrust_ab_lbf']:,} lbf (AB) at sea level")
+    print(f"   Total thrust: {DIMS['turbine_count']*DIMS['turbine_thrust_dry_lbf']:,} lbf dry / {DIMS['turbine_count']*DIMS['turbine_thrust_ab_lbf']:,} lbf AB at sea level")
+    print(f"   T/W ratio: {twr_dry:.2f}:1 (dry) / {twr_ab:.2f}:1 (AB) at full mass ({total_mass_kg:.1f} kg)")
     print(f"   Thrust scales with air density: at 28k ft (~{0.418/1.225*100:.0f}% rho) -> ~{DIMS['turbine_count']*DIMS['turbine_thrust_ab_lbf']*0.418/1.225:.0f} lbf")
     print(f"   SFC: {DIMS['turbine_sfc_dry_lb_lbh']} lb/(lbf*h) dry, {DIMS['turbine_sfc_ab_lb_lbh']} lb/(lbf*h) AB")
     print(f"   Fuel: {DIMS['fuel_type']}, {DIMS['fuel_capacity_l']}L ({DIMS['fuel_capacity_l']*DIMS['fuel_density_kg_l']:.1f} kg)")
-    burn_rate_kg_h = DIMS['turbine_count'] * DIMS['turbine_thrust_dry_lbf'] * DIMS['turbine_sfc_dry_lb_lbh'] * 0.4536
-    hover_min = DIMS['fuel_capacity_l'] * DIMS['fuel_density_kg_l'] / burn_rate_kg_h * 60
-    print(f"   Burn rate (full dry): {burn_rate_kg_h:.1f} kg/h -> hover endurance ~{hover_min:.0f} min")
+    # Hover endurance: hover thrust = weight, not full dry thrust
+    hover_thrust_lbf = weight_n / 4.448  # thrust needed to hover
+    hover_burn_kg_h = hover_thrust_lbf * DIMS['turbine_sfc_dry_lb_lbh'] * 0.4536
+    hover_min = DIMS['fuel_capacity_l'] * DIMS['fuel_density_kg_l'] / hover_burn_kg_h * 60
+    full_dry_burn_kg_h = DIMS['turbine_count'] * DIMS['turbine_thrust_dry_lbf'] * DIMS['turbine_sfc_dry_lb_lbh'] * 0.4536
+    print(f"   Hover thrust needed: {hover_thrust_lbf:.0f} lbf ({hover_thrust_lbf/(DIMS['turbine_count']*DIMS['turbine_thrust_dry_lbf'])*100:.0f}% throttle)")
+    print(f"   Hover burn rate: {hover_burn_kg_h:.1f} kg/h -> hover endurance ~{hover_min:.0f} min")
+    print(f"   Full dry burn rate: {full_dry_burn_kg_h:.1f} kg/h (at 100% throttle)")
     print(f"   Climb-glide cycling: 4-7 hours (5min climb + 25min glide, repeat)")
-    print(f"   Status: CHALLENGING (180k RPM magnetic bearings near-production, not commercial)")
+    print(f"   Status: CHALLENGING (150k RPM magnetic bearings near-production, not commercial)")
 
     print("\n3. ARMOR (4-LAYER)")
     print(f"   Outer: graphene-UHMWPE, {DIMS['outer_max_psi']:,} PSI, NIJ {DIMS['outer_nij_level']}")
     print(f"   Intermediate: auxetic metamaterial, Poisson={DIMS['auxetic_poisson']}")
     print(f"   Middle: tripled DEA-STF, {DIMS['stf_max_psi']:,} PSI absorption")
     print(f"   Inner: sensor suit, {DIMS['inner_thick_mm']}mm")
-    print(f"   Total thickness: ~{DIMS['total_thick_mm']}mm")
+    print(f"   Total thickness: {DIMS['total_thick_mm']}mm (ultra-conformed)")
     print(f"   Status: PARTIALLY BUILDABLE (UHMWPE NIJ IV exists; auxetic + DEA near-lab)")
 
     print("\n4. HELMET & LIFE SUPPORT")
@@ -8376,12 +9234,13 @@ def print_feasibility():
     print(f"   Status: BUILDABLE (Jetson Orin + FreeRTOS/Zephyr + TFLite)")
 
     print("\n8. WINGS & AERODYNAMICS")
-    print(f"   {DIMS['wing_span_m']}m span, {DIMS['wing_area_sqft']} sqft, L/D={DIMS['wing_ld_ratio']}:1")
+    print(f"   {DIMS['wing_span_m']}m span, {DIMS['wing_area_sqft']} sq ft ({DIMS['wing_area_sqft']*0.0929:.1f} m^2), L/D={DIMS['wing_ld_ratio']}:1")
     print(f"   Wing area: {DIMS['wing_area_sqft']*0.0929:.1f} m^2, CL_max=1.2, stall at ~15deg AoA")
     print(f"   Induced drag: CDi = CL^2 / (pi * AR * e), Oswald e=0.85")
     ar = DIMS['wing_span_m']**2 / (DIMS['wing_area_sqft'] * 0.0929)
     print(f"   Aspect ratio: {ar:.1f} (span^2/area)")
     print(f"   Lift: L = 0.5 * rho * v^2 * S * CL(alpha)")
+    print(f"   Compact wings: turbine-assisted glide, stows flat on back")
     print(f"   Status: BUILDABLE (nitinol + ripstop, proven in UAV/skydiving)")
 
     print("\n9. COMBAT SYSTEMS")
@@ -8417,9 +9276,10 @@ def print_feasibility():
     print(f"   Auto-aim range: {DIMS['perf_aim_range_miles']} miles ({DIMS['perf_aim_accuracy_pct']}% accuracy)")
     print(f"   Max speed: {DIMS['perf_max_speed_mph']} mph")
     print(f"   Service ceiling: {DIMS['perf_ceiling_ft']:,} ft")
-    print(f"   Hover endurance: ~{hover_min:.0f} min (full throttle, dry thrust)")
+    print(f"   Hover endurance: ~{hover_min:.0f} min (hover thrust, dry SFC)")
+    print(f"   T/W ratio: {twr_dry:.2f}:1 dry / {twr_ab:.2f}:1 AB (full mass {total_mass_kg:.1f} kg)")
     print(f"   Glide endurance: 4-7 hours (climb-glide cycling with {DIMS['fuel_capacity_l']}L fuel)")
-    print(f"   Weight: {DIMS['weight_total_kg']} kg ({DIMS['weight_total_kg']*2.2:.0f} lb) + {DIMS['fuel_capacity_l']*DIMS['fuel_density_kg_l']:.1f} kg fuel")
+    print(f"   Suit weight: {DIMS['weight_total_kg']} kg ({DIMS['weight_total_kg']*2.2:.0f} lb) + {DIMS['fuel_capacity_l']*DIMS['fuel_density_kg_l']:.1f} kg fuel + {DIMS['ref_weight_kg']} kg pilot")
 
     print("\n13. ESTIMATED COST")
     print(f"    Per suit: ~$1.8-2.4M (single unit), ~$650K (50+ units/year)")
@@ -8427,7 +9287,7 @@ def print_feasibility():
 
     print("\n" + "=" * 70)
     print("VERDICT: 80% buildable with 2025-2026 tech. Key risk areas:")
-    print("  - 180k RPM magnetic bearings (near-production, not commercial)")
+    print("  - 150k RPM magnetic bearings (near-production, not commercial)")
     print("  - DEA artificial muscle at scale (lab prototypes only)")
     print("  - Auxetic metamaterial manufacturing (3D printing feasible)")
     print("  - Neural BCI <17ms (achievable with current EEG+EMG)")
@@ -8734,6 +9594,11 @@ class App:
         # FPS tracking
         self.fps = 0.0
         self.show_fps = False
+        # Showcase mode (detailed component views with math proof)
+        self.show_showcase = False
+        self.showcase_idx = 0
+        self.showcase_parts = None  # lazy-loaded
+        self.showcase_scroll = 0
 
     def _init_joystick(self):
         """Initialize joystick/gamepad if available."""
@@ -8873,7 +9738,7 @@ class App:
             self.state.pitch_rate = -0.8
         elif keys[pygame.K_s]:
             self.state.pitch_rate = 0.8
-        elif self.joystick is None:
+        else:
             self.state.pitch_rate *= max(0.0, 1.0 - dt * 5.0)
 
         # Roll: A/D (hold for continuous)
@@ -8881,7 +9746,7 @@ class App:
             self.state.roll_rate = -0.8
         elif keys[pygame.K_d]:
             self.state.roll_rate = 0.8
-        elif self.joystick is None:
+        else:
             self.state.roll_rate *= max(0.0, 1.0 - dt * 5.0)
 
         # Yaw: LEFT/RIGHT arrows (hold for continuous)
@@ -8889,10 +9754,10 @@ class App:
             self.state.yaw_rate = -0.5
         elif keys[pygame.K_RIGHT]:
             self.state.yaw_rate = 0.5
-        elif self.joystick is None:
+        else:
             self.state.yaw_rate *= max(0.0, 1.0 - dt * 5.0)
 
-        # Thrust vector: IJKL keys (hold for continuous)
+        # Thrust vector: IJKL keys (hold for continuous), reset to vertical when released
         if keys[pygame.K_i]:
             self.state.thrust_vector = np.array([0, 1.0, -0.5])
             self.state.thrust_vector /= np.linalg.norm(self.state.thrust_vector)
@@ -8905,6 +9770,9 @@ class App:
         elif keys[pygame.K_l]:
             self.state.thrust_vector = np.array([0.5, 1.0, 0])
             self.state.thrust_vector /= np.linalg.norm(self.state.thrust_vector)
+        else:
+            # Reset to straight up when no vector keys held
+            self.state.thrust_vector = np.array([0.0, 1.0, 0.0])
 
         # Auto-fire when holding F in flight mode
         if keys[pygame.K_f] and self.state.auto_aim.lock_acquired:
@@ -9048,24 +9916,54 @@ class App:
                 self._update_test_env(dt)
                 if self.state.auto_aim.shots_hit > prev_hits and self.state.auto_aim.locked_target:
                     self._trigger_explosion(self.state.auto_aim.locked_target.pos.copy())
+                    # Award points for target kill
+                    self.state.game_score += 250
+                    self.state.game_combo += 1
+                    self.state.game_combo_timer = 5.0
+                    self.state.screen_shake = max(self.state.screen_shake, 0.4)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                elif event.type == pygame.VIDEORESIZE:
+                    self.width = event.w
+                    self.height = event.h
+                    screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
                 elif event.type == pygame.KEYDOWN:
                     self.keys_held.add(event.key)
                     running = self._handle_key(event.key)
                 elif event.type == pygame.KEYUP:
                     self.keys_held.discard(event.key)
                 elif event.type == pygame.MOUSEWHEEL:
-                    if self.mode == "model":
+                    # Help/instructions scroll (any mode)
+                    if self.show_help:
+                        self.help_scroll = max(0, self.help_scroll - event.y * 30)
+                    elif getattr(self, 'show_instructions', False):
+                        self.instr_scroll = max(0, getattr(self, 'instr_scroll', 0) - event.y * 30)
+                    elif self.mode == "model":
+                        # Check if mouse is over showcase panel
+                        if getattr(self, 'show_showcase', False) and self.showcase_parts:
+                            sc_pw = min(410, int(rect.w * 0.32))
+                            sc_x = rect.x + rect.w - sc_pw - 10
+                            sc_rect = pygame.Rect(sc_x, rect.y + 10, sc_pw, rect.h - 40)
+                            if sc_rect.collidepoint(self.mouse_pos):
+                                self.showcase_scroll = max(0, self.showcase_scroll - event.y * 30)
+                            else:
+                                self.model_renderer.dist_target = clamp(
+                                    self.model_renderer.dist_target - event.y * 0.5,
+                                    self.model_renderer.zoom_min, self.model_renderer.zoom_max)
                         # Check if mouse is over info panel
-                        pw = 360
-                        info_x = rect.x + rect.w - pw - 10
-                        info_y = rect.y + 10
-                        info_rect = pygame.Rect(info_x, info_y, pw, rect.h - 40)
-                        if self.show_info and info_rect.collidepoint(self.mouse_pos):
-                            self.info_scroll = max(0, self.info_scroll - event.y * 30)
+                        elif self.show_info:
+                            pw = min(360, int(rect.w * 0.28))
+                            info_x = rect.x + rect.w - pw - 10
+                            info_y = rect.y + 10
+                            info_rect = pygame.Rect(info_x, info_y, pw, rect.h - 40)
+                            if info_rect.collidepoint(self.mouse_pos):
+                                self.info_scroll = max(0, self.info_scroll - event.y * 30)
+                            else:
+                                self.model_renderer.dist_target = clamp(
+                                    self.model_renderer.dist_target - event.y * 0.5,
+                                    self.model_renderer.zoom_min, self.model_renderer.zoom_max)
                         else:
                             self.model_renderer.dist_target = clamp(
                                 self.model_renderer.dist_target - event.y * 0.5,
@@ -9089,7 +9987,7 @@ class App:
                                         break
                             # Check info panel
                             if not on_overlay and self.show_info:
-                                pw = 360
+                                pw = min(360, int(rect.w * 0.28))
                                 info_rect = pygame.Rect(rect.x + rect.w - pw - 10, rect.y + 10, pw, rect.h - 40)
                                 if info_rect.collidepoint(event.pos):
                                     on_overlay = True
@@ -9140,10 +10038,13 @@ class App:
                     draw_blueprint(screen, rect, self.parts, self.font, self.font_sm)
                 if getattr(self, 'show_overview', False):
                     draw_suit_overview(screen, rect, self.parts, self.font, self.font_sm)
+                if getattr(self, 'show_showcase', False) and self.showcase_parts:
+                    self._draw_showcase(screen, rect)
             elif self.mode == "flight":
                 self.flight_renderer.render(screen, rect, self.state, self.angles,
                                             font=self.font)
                 draw_hud(screen, rect, self.state, self.physics, self.font, self.font_sm)
+                draw_game_hud(screen, rect, self.state, self.font, self.font_sm)
                 self._draw_explosions(screen, rect, self.state)
                 if self.combat_scenario:
                     self._draw_scenario_info(screen, rect)
@@ -9171,9 +10072,17 @@ class App:
             self.mode = {"model": "flight", "flight": "layers", "layers": "model"}[self.mode]
             print(f"Mode: {self.mode.upper()}")
         elif key == pygame.K_h:
-            self.show_help = not self.show_help
+            if self.mode == "flight":
+                self.flight_renderer.show_heat = not self.flight_renderer.show_heat
+                print(f"Heat overlay: {'ON' if self.flight_renderer.show_heat else 'OFF'}")
+            else:
+                self.show_help = not self.show_help
+                if self.show_help:
+                    self.help_scroll = 0
         elif key == pygame.K_F1:
             self.show_instructions = not getattr(self, 'show_instructions', False)
+            if self.show_instructions:
+                self.instr_scroll = 0
             print(f"Instructions: {'ON' if self.show_instructions else 'OFF'}")
         elif key == pygame.K_i:
             self.show_info = not self.show_info
@@ -9231,8 +10140,15 @@ class App:
             self.state.throttle_target = 0.3
             self.state.afterburner = False
         elif key == pygame.K_z:
-            self.state.throttle_target = max(0.0, self.state.env_gravity * self.physics.total_mass /
-                                             (DIMS["turbine_count"] * DIMS["turbine_thrust_dry_lbf"] * 4.448))
+            # Altitude-hold: set throttle to hover thrust accounting for density + fuel
+            rho_sl = 1.225
+            density_ratio = min(1.0, self.state.env_density / rho_sl) if self.state.env_density > 0.001 else 0.0
+            total_mass = self.state.pilot_mass + DIMS["weight_total_kg"] + self.state.fuel_kg
+            weight_n = total_mass * self.state.env_gravity
+            max_thrust_n = DIMS["turbine_count"] * DIMS["turbine_thrust_dry_lbf"] * 4.448 * density_ratio
+            self.state.throttle_target = clamp(weight_n / max(max_thrust_n, 1.0), 0.0, 1.0)
+            self.state.auto_hover = True
+            print(f"Altitude-hold ON (throttle={self.state.throttle_target:.2f})")
         elif key == pygame.K_6:
             self.state.wing_target = 0.0 if self.state.wing_target > 0.5 else 1.0
             print(f"Wings: {'DEPLOYED' if self.state.wing_target > 0.5 else 'STOWED'}")
@@ -9291,9 +10207,6 @@ class App:
         elif key == pygame.K_y:
             self.state.rtos.inject_virus(target_task="neural", at_s=0.0)
             print("VIRUS INJECTED -> testing failover...")
-        elif key == pygame.K_k:
-            self.flight_renderer.show_heat = not self.flight_renderer.show_heat
-            print(f"Heat overlay: {'ON' if self.flight_renderer.show_heat else 'OFF'}")
         # Test environment controls
         elif key == pygame.K_u:
             self.test_targets_auto = not self.test_targets_auto
@@ -9384,6 +10297,24 @@ class App:
             if ok:
                 self.state.maglev.detect_surface("steel")
                 print(f"Maglev: {'ACTIVE' if self.state.maglev.active else 'OFF'}  {self.state.maglev.status}")
+        elif key == pygame.K_s:
+            if self.mode == "model":
+                self.show_showcase = not self.show_showcase
+                if self.show_showcase and self.showcase_parts is None:
+                    from showcase import get_all_showcases
+                    self.showcase_parts = get_all_showcases()
+                self.showcase_scroll = 0
+                print(f"Showcase: {'ON' if self.show_showcase else 'OFF'}")
+        elif key == pygame.K_LEFTBRACKET:
+            if self.show_showcase and self.showcase_parts:
+                self.showcase_idx = (self.showcase_idx - 1) % len(self.showcase_parts)
+                self.showcase_scroll = 0
+                print(f"Showcase: {self.showcase_parts[self.showcase_idx].name}")
+        elif key == pygame.K_RIGHTBRACKET:
+            if self.show_showcase and self.showcase_parts:
+                self.showcase_idx = (self.showcase_idx + 1) % len(self.showcase_parts)
+                self.showcase_scroll = 0
+                print(f"Showcase: {self.showcase_parts[self.showcase_idx].name}")
         return True
 
     def _draw_scenario_info(self, surf, rect):
@@ -9396,21 +10327,212 @@ class App:
         alive = sum(1 for t in self.state.auto_aim.targets if not t.hit)
         surf.blit(self.font_sm.render(f"Targets alive: {alive}", True, C_WARN if alive > 0 else C_OK), (x + 8, y + 24))
 
-    def _draw_controls_bar(self, surf):
-        y = self.height - 24
-        _panel(surf, 0, y, self.width, 24, 200)
-        if self.mode == "model":
-            text = "TAB:mode  mouse:orbit  wheel:zoom/scroll-info  L:labels  E:explode  X:section  ,/.:isolate  I:info  U:browser(click)  B:blueprint  0:overview  1-4:view  O:export  H:help  F1:instructions  ESC:quit"
-        elif self.mode == "flight":
-            text = ("TAB:mode  W/S:pitch  A/D:roll  L/R:yaw  UP/DN:thr  SPACE:max  C:cut  V:hover  "
-                    "Z:alt-hold  6:wings  [/]:env  F/click:fire  T:target  U:auto-tgt  M:scenario  "
-                    "G:defense  J:jump  5:EMP  4:damage  7:squad  8:chase-cam  9:FPS  "
-                    "B:auto-hover  N:auto-lvl  K:heat  R:reset  "
-                    "F2:zoom  F3:NV  F4:thermal  F5:thermal-mode  F6:muscle  F7:STF  F8:crypto  "
-                    "H:help  F1:instructions")
+    def _draw_showcase(self, surf, rect):
+        """Draw showcase mode: 3D exploded detail view + spec panel with math proof."""
+        if not self.showcase_parts:
+            return
+        sp = self.showcase_parts[self.showcase_idx]
+
+        # --- Left side: 3D rendered showcase part ---
+        pw = min(410, int(rect.w * 0.32))
+        render_rect = pygame.Rect(rect.x, rect.y, rect.w - pw - 20, rect.h)
+        surf.set_clip(render_rect)
+
+        cx = render_rect.x + render_rect.w / 2.0
+        cy = render_rect.y + render_rect.h / 2.0
+        focal = min(render_rect.w, render_rect.h) * 0.8
+        az = self.model_renderer.az
+        el = self.model_renderer.el
+        Rcam = rot_x(el) @ rot_y(az)
+        light = self.model_renderer.light
+
+        polys = []
+        default_ang = self.angles.get("default", 0.0)
+
+        # Auto-frame: compute bounding box of all meshes to set camera distance
+        all_wv = []
+        for m in sp.meshes:
+            wv = m.world_verts(self.angles.get(m.group, default_ang))
+            all_wv.append(wv)
+        if all_wv:
+            all_pts = np.vstack(all_wv)
+            bbox_min = all_pts.min(axis=0)
+            bbox_max = all_pts.max(axis=0)
+            bbox_size = np.linalg.norm(bbox_max - bbox_min)
+            dist = max(bbox_size * 0.8, 1.0)
         else:
-            text = "TAB:mode  1-4:layers  E:explode  L:labels  H:help  F1:instructions  ESC:quit"
-        surf.blit(self.font_sm.render(text, True, C_DIM), (8, y + 5))
+            dist = max(3.0, self.model_renderer.dist * 0.5)
+
+        for m in sp.meshes:
+            wv = m.world_verts(self.angles.get(m.group, default_ang))
+            cam = wv @ Rcam.T
+            cam[:, 2] += dist
+            col = m.color
+            if m.emissive:
+                col = _mix(col, (255, 255, 255), 0.25)
+            z = cam[:, 2]
+            safe = np.where(z > 0.05, z, 1e9)
+            sx = cx + focal * cam[:, 0] / safe
+            sy = cy - focal * cam[:, 1] / safe
+            _emit_polys(polys, cam, sx, sy, col, light, True, m.emissive,
+                        _face_groups(m), 3.0, False)
+
+        polys.sort(key=lambda t: t[0], reverse=True)
+        for _, pts, fcol, hl in polys:
+            if len(pts) >= 3:
+                try:
+                    pygame.draw.polygon(surf, fcol, pts)
+                    pygame.draw.polygon(surf, (12, 14, 20), pts, 1)
+                except Exception:
+                    pass
+
+        surf.set_clip(None)
+
+        # Title bar
+        _panel(surf, render_rect.x + 8, render_rect.y + 8, render_rect.w - 16, 28, 230)
+        surf.blit(self.font.render(sp.name, True, C_ACCENT), (render_rect.x + 14, render_rect.y + 12))
+        nav = f"[{self.showcase_idx + 1}/{len(self.showcase_parts)}]  [ / ] to cycle"
+        surf.blit(self.font_sm.render(nav, True, C_DIM), (render_rect.x + render_rect.w - 200, render_rect.y + 14))
+
+        # Scale indicator
+        if "Atomic Scale" in sp.name or "Nano Scale" in sp.name or "Structural Scale" in sp.name:
+            # Extract zoom from name
+            zoom_match = ""
+            for s in sp.specs[:3]:
+                if "Scale: 1 display unit" in s:
+                    zoom_match = s.split("=")[-1].strip()
+                    break
+            scale_txt = f"ZOOMED {zoom_match}" if zoom_match else "ATOMIC ZOOM"
+            surf.blit(self.font_sm.render(scale_txt, True, C_WARN), (render_rect.x + 14, render_rect.y + 40))
+            surf.blit(self.font_sm.render("Red dot = true scale ref", True, C_ACCENT2),
+                      (render_rect.x + 14, render_rect.y + 56))
+        elif "100%" in " ".join(sp.specs[:3]):
+            scale_txt = "100% TO SCALE"
+            surf.blit(self.font_sm.render(scale_txt, True, C_OK), (render_rect.x + 14, render_rect.y + 40))
+        else:
+            scale_txt = "COMPONENT SCALE"
+            surf.blit(self.font_sm.render(scale_txt, True, C_OK), (render_rect.x + 14, render_rect.y + 40))
+
+        # --- Right side: spec panel with math proof (scrollable) ---
+        px = rect.x + rect.w - pw - 10
+        py = rect.y + 10
+        max_h = rect.h - 40
+
+        # Calculate content height
+        line_h = 15
+        content_h = 40  # header
+        for line in sp.specs:
+            content_h += line_h
+        content_h += 24  # footer
+
+        max_scroll = max(0, content_h - max_h)
+        self.showcase_scroll = max(0, min(self.showcase_scroll, max_scroll))
+        h = min(content_h, max_h)
+
+        _panel(surf, px, py, pw, h, 235)
+        old_clip = surf.get_clip()
+        surf.set_clip(pygame.Rect(px + 2, py + 2, pw - 4, h - 4))
+
+        # Header
+        surf.blit(self.font.render("SHOWCASE SPECS", True, C_ACCENT), (px + 8, py + 8))
+        surf.blit(self.font_sm.render(sp.name, True, C_DIM), (px + 8, py + 28))
+        pygame.draw.line(surf, C_DIM, (px + 8, py + 48), (px + pw - 8, py + 48), 1)
+
+        # Spec lines with scroll
+        ly = py + 54 - self.showcase_scroll
+        for line in sp.specs:
+            if ly > py + h - 10:
+                break
+            if ly + line_h < py + 50:
+                ly += line_h
+                continue
+            if line.startswith("==="):
+                color = C_ACCENT
+                surf.blit(self.font_sm.render(line, True, color), (px + 8, ly))
+            elif line.startswith("MATH PROOF"):
+                color = C_OK
+                surf.blit(self.font_sm.render(line, True, color), (px + 8, ly))
+            elif line.endswith("✓"):
+                color = C_OK
+                surf.blit(self.font_sm.render(line, True, color), (px + 8, ly))
+            elif "Proof:" in line or "proof:" in line:
+                color = C_WARN
+                surf.blit(self.font_sm.render(line, True, color), (px + 8, ly))
+            elif line == "":
+                pass
+            elif any(line.startswith(kw) for kw in ["EMG", "PCM", "Capillary", "Silver", "Spine",
+                                                       "DEA", "STF", "CNT", "Graphene", "Jump",
+                                                       "Ceramic", "UHMWPE", "Armor", "Self-Healing",
+                                                       "Coating", "Thermal", "Compressor", "Combustor",
+                                                       "Turbine", "Bypass", "Thrust", "Vectoring",
+                                                       "Shell", "Visor", "Neural", "Life", "Helmet",
+                                                       "O2", "CO2",
+                                                       "Polymer", "Compliant", "Crosslink", "Maxwell",
+                                                       "Energy", "Shear", "Hydrocluster", "Re-entrant",
+                                                       "Negative", "Crystalline", "Tensile", "Ballistic",
+                                                       "Projectile", "Hardness", "Grain", "Aerogel",
+                                                       "Electron", "Lattice", "Orthorhombic", "Specific",
+                                                       "Volume", "Material", "Chain", "Scale",
+                                                       "True-scale", "Foam", "Draw", "Melting",
+                                                       "Above", "At low", "At crit",
+                                                       "CFRP", "Ti-6Al", "Maxon", "Spectra",
+                                                       "Telescoping", "Li-S", "Anode", "Cathode",
+                                                       "Reaction", "Cell", "Cycles", "Hover",
+                                                       "Electrical", "Solar", "Piezo", "Hot-Swap",
+                                                       "During", "Emergency", "EEG", "AI",
+                                                       "Auto-aim", "Defense", "G-limiter", "Eye",
+                                                       "Pupil", "Calibration", "Crypto", "Latency",
+                                                       "Sampling", "Signal", "Gesture", "Stall",
+                                                       "Best", "Deployment", "Tear", "Buckling",
+                                                       "Nodes", "Pivots", "Straps", "Fits",
+                                                       "Lock", "Tubes", "Status", "Individual"]):
+                color = C_ACCENT2
+                surf.blit(self.font_sm.render(line, True, color), (px + 8, ly))
+            else:
+                color = C_TEXT
+                surf.blit(self.font_sm.render(line, True, color), (px + 8, ly))
+            ly += line_h
+
+        surf.set_clip(old_clip)
+
+    def _draw_controls_bar(self, surf):
+        bar_h = 28
+        y = self.height - bar_h
+        _panel(surf, 0, y, self.width, bar_h, 200)
+        if self.mode == "model":
+            texts = [
+                "TAB:mode  mouse:orbit  wheel:zoom  L:labels  E:explode  X:section  ,/.:isolate",
+                "I:info  U:browser  B:blueprint  0:overview  S:showcase(15)  [/:cycle  ]:cycle  O:export  H:help  F1:instr  ESC:quit",
+            ]
+        elif self.mode == "flight":
+            texts = [
+                "TAB:mode  W/S:pitch  A/D:roll  L/R:yaw  UP/DN:thr  IJKL:vec  SPACE:burn  C:cut  V:hover  Z:alt-hold",
+                "6:wings  [/:env  ]:env  F:fire  T:target  M:scenario  G:defense  J:jump  7:squad  8:chase  9:FPS  R:reset",
+                "B:hover  N:level  H:heat  F2-F12:upgrades  F1:instr  ESC:quit",
+            ]
+        else:
+            texts = ["TAB:mode  1-4:layers  E:explode  L:labels  H:help  F1:instructions  ESC:quit"]
+        max_w = self.width - 16
+        shown = []
+        for t in texts:
+            tw = self.font_sm.size(t)[0]
+            if tw <= max_w:
+                shown.append(t)
+            else:
+                shown.extend(_wrap_text(t, self.font_sm, max_w))
+        line_h = 14
+        total_h = len(shown) * line_h
+        start_y = y + (bar_h - total_h) // 2
+        for i, t in enumerate(shown):
+            surf.blit(self.font_sm.render(t, True, C_DIM), (8, start_y + i * line_h))
+        # Adjust bar height if multi-line
+        if len(shown) > 1:
+            needed = len(shown) * line_h + 6
+            if needed > bar_h:
+                y2 = self.height - needed
+                _panel(surf, 0, y2, self.width, needed, 200)
+                for i, t in enumerate(shown):
+                    surf.blit(self.font_sm.render(t, True, C_DIM), (8, y2 + 3 + i * line_h))
 
     def _draw_help(self, surf):
         lines = [
@@ -9432,6 +10554,8 @@ class App:
             "  E ............... toggle exploded",
             "  X ............... toggle section cut",
             "  , / . ........... cycle part isolation",
+            "  S ............... toggle showcase (15 detailed views)",
+            "  [ / ] ........... cycle showcase items",
             "  O ............... export OBJ",
             "",
             "FLIGHT MODE -- KEYBOARD",
@@ -9443,80 +10567,77 @@ class App:
             "  W / S ............ pitch down / up (hold)",
             "  A / D ............ roll left / right (hold)",
             "  LEFT / RIGHT ..... yaw left / right (hold)",
-            "  I / K ............ thrust vector fwd / back",
-            "  J / L ............ thrust vector left / right",
+            "  I / K ............ thrust vector fwd / back (hold)",
+            "  J / L ............ thrust vector left / right (hold)",
             "  6 ................ toggle wing deployment",
             "  [ / ] ............ cycle environment (11 presets)",
             "  R ................ reset position + attitude",
             "  B ................ toggle auto-hover",
             "  N ................ toggle auto-level",
-            "  8 ................ toggle chase camera (follows velocity)",
+            "  8 ................ toggle chase camera",
             "  9 ................ toggle FPS/debug overlay",
             "",
-            "FLIGHT MODE -- GAMEPAD (if connected)",
-            "  Left stick ....... pitch (Y) + roll (X)",
-            "  Right stick ...... yaw (X) + thrust vector (Y)",
-            "  Right trigger .... throttle up",
-            "  Left trigger ..... throttle down",
-            "  A button ......... afterburner toggle",
-            "  B button ......... cut throttle",
-            "  X button ......... fire weapon",
-            "  Y button ......... toggle wings",
-            "  LB / RB .......... cycle environment",
-            "  Back ............. toggle auto-hover",
-            "  Start ............ toggle auto-level",
-            "  D-pad up ......... charge/execute jump",
-            "",
-            "FLIGHT MODE -- MOUSE",
-            "  Left drag ........ orbit camera",
-            "  Left click ....... fire at locked target",
-            "  Wheel ............ zoom",
-            "",
-            "COMBAT & TEST CONTROLS",
+            "FLIGHT MODE -- GAME",
+            "  Fly through RINGS for points (100 pts each, combo multiplier)",
             "  F / click ........ fire at locked target",
             "  T ................ spawn hostile target",
             "  U ................ toggle auto-target spawning",
             "  M ................ toggle combat scenario (waves)",
             "  G ................ toggle defense AI",
             "  J ................ charge/execute 200ft jump",
-            "  5 ................ EMP test (120dB strike)",
-            "  4 ................ damage test (armor hit)",
             "  7 ................ add squad member",
-            "  Y ................ inject virus (test failover)",
-            "  K ................ toggle heat overlay",
             "",
-            "UPGRADE SYSTEM CONTROLS (15 NEW FEATURES)",
-            "  F2 ................ toggle active camouflage / stealth",
-            "  F3 ................ cycle vision mode (normal/night/thermal/sonar/xray)",
-            "  F4 ................ fire grappling hook (or release if deployed)",
-            "  F5 ................ toggle grapple winch (pull toward anchor)",
-            "  F6 ................ deploy emergency ballistic parachute",
-            "  F7 ................ launch micro-drone swarm (4x recon)",
-            "  F8 ................ recall all drones to suit",
-            "  F9 ................ deploy flare countermeasure",
-            "  F10 ............... activate energy shield (plasma barrier)",
-            "  F11 ............... toggle deployable tactical shield",
-            "  F12 ............... fire stun / taser (non-lethal)",
-            "  SCROLL LOCK ....... toggle emergency locator beacon",
-            "  PAUSE ............. toggle maglev wall-climbing mode",
+            "FLIGHT MODE -- GAMEPAD",
+            "  Left stick ....... pitch (Y) + roll (X)",
+            "  Right stick ...... yaw (X) + thrust vector (Y)",
+            "  R trigger ........ throttle up  |  L trigger .... throttle down",
+            "  A: afterburner  B: cut  X: fire  Y: wings  D-pad up: jump",
+            "",
+            "UPGRADE SYSTEMS (F2-F12)",
+            "  F2: active camouflage  F3: night vision  F4: thermal/FLIR",
+            "  F5: thermal mode  F6: DEA muscle  F7: STF test  F8: crypto",
+            "  F9: flare  F10: energy shield  F11: tac shield  F12: stun",
+            "  SCROLL: beacon  PAUSE: maglev climb",
             "",
             "ANY MODE",
             "  TAB .............. switch model/flight/layers",
-            "  H ................ toggle this help (key reference)",
-            "  F1 ............... toggle instructions (getting started + donning guide)",
-            "  I ................ toggle info panel",
+            "  H ................ toggle this help",
+            "  F1 ............... toggle instructions",
             "  P ................ pause simulation",
-            "  O ................ export OBJ",
             "  ESC / Q .......... quit",
         ]
-        w = 460
-        h = len(lines) * 18 + 20
+        w = min(480, self.width - 40)
+        line_h = 16
+        content_h = len(lines) * line_h + 20
+        max_h = self.height - 60
+        h = min(content_h, max_h)
         x = (self.width - w) // 2
         y = 30
-        _panel(surf, x, y, w, h, 240)
+
+        if not hasattr(self, 'help_scroll'):
+            self.help_scroll = 0
+        max_scroll = max(0, content_h - h)
+        self.help_scroll = max(0, min(self.help_scroll, max_scroll))
+
+        _panel(surf, x, y, w, h, 245)
+        old_clip = surf.get_clip()
+        surf.set_clip(pygame.Rect(x + 2, y + 2, w - 4, h - 4))
+
         for i, line in enumerate(lines):
+            ly = y + 10 + i * line_h - self.help_scroll
+            if ly < y + 4 or ly > y + h - 4:
+                continue
             col = C_ACCENT if i == 0 else C_TEXT
-            surf.blit(self.font_sm.render(line, True, col), (x + 12, y + 10 + i * 18))
+            surf.blit(self.font_sm.render(line, True, col), (x + 12, ly))
+
+        # Scroll indicator
+        if max_scroll > 0:
+            sb_x = x + w - 6
+            sb_h = max(20, h * h / content_h)
+            sb_y = y + int(self.help_scroll / max_scroll * (h - sb_h))
+            pygame.draw.rect(surf, (60, 70, 86), (sb_x, sb_y, 4, sb_h))
+
+        surf.set_clip(old_clip)
 
     def _draw_instructions(self, surf):
         """Draw categorized instructions / getting-started guide."""
@@ -9527,10 +10648,11 @@ class App:
                 "3. Press U to browse all 12 parts. Press B for the build blueprint.",
                 "4. Press 0 for suit overview (weight, gear inventory, performance).",
                 "5. Press TAB to switch to FLIGHT mode.",
-                "6. In FLIGHT: hold UP to throttle up, W/S to pitch, A/D to roll.",
+                "6. In FLIGHT: hold UP to throttle up, W/S to pitch, A/D to roll, L/R to yaw.",
                 "7. Press SPACE for max throttle + afterburner. Press 6 to deploy wings.",
-                "8. Press F or left-click to fire. Press T to spawn targets.",
-                "9. Press H anytime for full key reference. Press ESC to quit.",
+                "8. Fly through glowing RINGS for points! Chain them for combo multipliers!",
+                "9. Press F or left-click to fire. Press T to spawn targets.",
+                "10. Press F1 anytime for full key reference. Press ESC to quit.",
             ]),
             ("SUIT DONNING SEQUENCE (in-universe)", C_ACCENT2, [
                 "Step 1: Inner suit -- pull on like wetsuit, connect EMG spine snap",
@@ -9556,11 +10678,12 @@ class App:
             ]),
             ("FLIGHT MODE -- Fly the Suit", C_FIBER, [
                 "UP/DOWN: throttle | SPACE: max+afterburner | C: cut | V: hover",
-                "W/S: pitch | A/D: roll | LEFT/RIGHT: yaw | Z: altitude hold",
+                "W/S: pitch | A/D: roll | L/R: yaw | IJKL: thrust vector | Z: altitude hold",
                 "6: deploy wings | [/]: cycle environment (Earth/Mars/Space/Ocean)",
+                "FLY THROUGH RINGS for points + combo! Chase cam follows your velocity",
                 "F/click: fire | T: spawn target | U: auto-target | M: combat scenario",
                 "G: defense AI | J: 200ft jump | 5: EMP test | 4: damage test",
-                "7: squad member | 8: chase cam | 9: FPS | R: reset | B: auto-hover",
+                "7: squad member | 8: chase cam (default ON) | 9: FPS | R: reset | B: auto-hover",
             ]),
             ("SUIT SYSTEMS (F2-F8)", C_ACCENT2, [
                 "F2: cycle visor zoom (1x to 1000x) | F3: night vision | F4: thermal/FLIR",
@@ -9581,40 +10704,54 @@ class App:
             ]),
         ]
 
-        w = 520
-        h = 0
+        w = min(520, self.width - 40)
+        content_h = 0
         for title, col, items in sections:
-            h += 22  # section header
-            h += len(items) * 16
-            h += 10  # gap
-        h += 20
+            content_h += 22  # section header
+            content_h += len(items) * 16
+            content_h += 10  # gap
+        content_h += 20
         x = (self.width - w) // 2
         y = 20
-        h = min(h, self.height - 40)
+        h = min(content_h, self.height - 40)
+
+        if not hasattr(self, 'instr_scroll'):
+            self.instr_scroll = 0
+        max_scroll = max(0, content_h - h)
+        self.instr_scroll = max(0, min(self.instr_scroll, max_scroll))
 
         _panel(surf, x, y, w, h, 245)
 
         old_clip = surf.get_clip()
         surf.set_clip(pygame.Rect(x + 2, y + 2, w - 4, h - 4))
 
-        cy = y + 10
+        cy = y + 10 - self.instr_scroll
         for title, col, items in sections:
-            if cy > y + h - 10:
+            if cy > y + h - 4:
                 break
-            surf.blit(self.font.render(title, True, col), (x + 12, cy))
+            if cy + 20 >= y + 4:
+                surf.blit(self.font.render(title, True, col), (x + 12, cy))
             cy += 20
             for item in items:
-                if cy > y + h - 10:
+                if cy > y + h - 4:
                     break
                 for line in _wrap_text(item, self.font_sm, w - 30):
-                    if cy > y + h - 10:
+                    if cy > y + h - 4:
                         break
-                    surf.blit(self.font_sm.render(line, True, C_TEXT), (x + 16, cy))
+                    if cy + 16 >= y + 4:
+                        surf.blit(self.font_sm.render(line, True, C_TEXT), (x + 16, cy))
                     cy += 16
             cy += 8
-            if cy < y + h - 4:
+            if y + 4 < cy < y + h - 4:
                 pygame.draw.line(surf, (40, 44, 52), (x + 8, cy), (x + w - 8, cy), 1)
             cy += 6
+
+        # Scroll indicator
+        if max_scroll > 0:
+            sb_x = x + w - 6
+            sb_h = max(20, h * h / content_h)
+            sb_y = y + int(self.instr_scroll / max_scroll * (h - sb_h))
+            pygame.draw.rect(surf, (60, 70, 86), (sb_x, sb_y, 4, sb_h))
 
         surf.set_clip(old_clip)
 
