@@ -4,19 +4,25 @@ This document explains *how the suit works* in the simulator: the three operatin
 modes, the layered architecture, every subsystem, and the physics that ties them
 together. For install/run/controls see [README.md](README.md).
 
-The model spans two files: [flysuit.py](flysuit.py) (~10,800 lines) contains the
+The model spans two files: [flysuit.py](flysuit.py) (~10,850 lines) contains the
 simulator core (specs, systems, physics, renderer, tests), and
-[showcase.py](showcase.py) (~1,500 lines) contains 15 detailed component
+[showcase.py](showcase.py) (~1,370 lines) contains 15 detailed component
 showcases with 3D meshes, math proof, and true-scale specifications. The code is
 organized top-to-bottom as: **`DIMS`** (the SI/mm specification — the single
 source of truth) → **system classes** → **`SuitState`** (owns and steps every
 subsystem each tick) → **`SuitPhysics`** (6-DOF integrator) → **renderers / HUD**
 → **`App`**.
 
-The suit's visual design is **angular and faceted** (MJOLNIR/Iron Man style),
-not round or blobby. Inner and middle layers use hexagonal cross-section torso
-and limb primitives (`_angular_torso`, `_angular_limb`), and outer armor plates
-are chamfered with visible gaps at joints for a sleek, forged appearance.
+The suit's visual design is **smooth and aerodynamic** with a sealed, continuous
+armor skin. The torso and limbs use smooth elliptical cross-section primitives
+(`_smooth_torso`, `_smooth_limb`) with high segment counts (24 torso, 20 limbs)
+for a form-fitting, contoured surface. Outer armor plates are flush chamfered
+panels with recessed panel-line grooves and subtle color variation between
+sections. Pronounced shoulder pauldrons, bicep/tricep contour panels, thigh/shin
+detail plates, smooth joint-cover spheres at shoulders and hips, and an
+aerodynamic helmet with wraparound visor and cheek guards complete the look.
+A deployable wingsuit membrane stretches from arms to torso and between legs for
+glide flight, replacing rigid wing surfaces.
 
 ---
 
@@ -29,10 +35,12 @@ each frame from throttle, wings, and ambient density (`SuitState.flight_mode`).
 VTOL and cruise flight on 48 thrust-vectoring micro-turbofans burning Jet-A1
 fuel (SFC-modeled: 1.02 lb/(lbf·h) dry, 1.85 AB), with a 72 L conformal
 self-sealing bladder (~58 kg fuel). Thrust scales with air density (mass flow
-rate ρ/ρ₀), so at 28 k ft thrust drops to ~34% of sea-level. Compact deployable
-gliding wings (3.5 m span, 22 ft², 12:1 glide) provide efficient range extension
+rate ρ/ρ₀), so at 28 k ft thrust drops to ~34% of sea-level. Deployable
+wingsuit membrane (3.5 m span, 22 ft², 12:1 glide) provides efficient range extension
 with proper induced drag (CDi = CL²/(π·AR·e), Oswald e = 0.85) — turbines
-maintain airspeed, wings provide lift. Wings stow flat against back armor. A
+maintain airspeed, wings provide lift. The membrane stretches from arms to torso
+(arm-to-body) and between legs (leg-to-leg) like a real wingsuit/tracking suit,
+with nitinol ribs for shape retention. Wings stow flat against back armor. A
 full combat suite includes Kalman-tracked auto-aim with ballistic firing
 solutions, a martial-arts defense AI, energy and tactical shields, a recon drone
 swarm, countermeasures, a non-lethal stun, and a grappling winch. Muscle fibers
@@ -63,8 +71,11 @@ sealed helmet and hull are rated to 1,000 m.
 
 Four concentric layers, **7.5 mm total** (6.9 mm materials + 0.6 mm gaps), each
 a real material with real properties. A 0.05 mm Faraday mesh is embedded within
-the middle layer. All layers use angular hexagonal cross-sections for a
-MJOLNIR/Iron Man aesthetic.
+the middle layer. All layers use smooth elliptical cross-sections with high
+segment counts for a sealed, form-fitting armor skin. The outer shell features
+flush detail panels (bicep, tricep, forearm, thigh, shin), pronounced shoulder
+pauldrons, smooth joint covers at shoulders and hips, and recessed panel-line
+grooves between armor sections with subtle color variation.
 
 | Layer | Thickness | Material | Function |
 |---|---|---|---|
@@ -116,7 +127,7 @@ All of these are classes in `flysuit.py`, instantiated and stepped by `SuitState
 **Simulation core**
 - `SuitState` — the live state; `update(dt)` steps every subsystem in order.
 - `SuitPhysics` — 6-DOF translational + rotational integrator: thrust, drag, lift, gravity, buoyancy, wind, muscle assist, g-limiting; environment-aware (air / water / vacuum).
-- `Mesh` / `Part` / `SuitRenderer` / `FlightRenderer` / `App` — geometry, HUD, and the interactive shell. The UI is fully responsive: all panels scale with window size via `pygame.VIDEORESIZE`, and help/instructions/showcase/info panels support mouse-wheel scrolling.
+- `Mesh` / `Part` / `SuitRenderer` / `FlightRenderer` / `App` — geometry, HUD, and the interactive shell. The renderer uses a y-up coordinate system with smooth elliptical mesh primitives (`_smooth_torso`, `_smooth_limb`, `_helmet_shell`, `_pauldron`, `_sphere`), flush armor plates (`_armor_plate`), and recessed panel lines (`_panel_line`). The UI is fully responsive: all panels scale with window size via `pygame.VIDEORESIZE`, and help/instructions/showcase/info panels support mouse-wheel scrolling.
 - **Showcase system** (`showcase.py`) — 15 detailed component views: inner suit, middle layer, outer armor, turbine, helmet, DEA/STF/auxetic/graphene/UHMWPE/ceramic atomic-scale, CFRP frame, Archangel wings, power system, and neural BCI + AI co-pilot. Each includes 3D meshes, sub-components, math proof, and true-scale reference dots.
 
 ---
@@ -166,7 +177,7 @@ cosmetic:
 | Pilot range | 0.99–2.21 m (3′3″–7′3″), 29.5–190.5 kg (65–420 lb), telescoping |
 | Propulsion | 48 micro-turbofans, 68 lbf dry / 112 lbf AB, 180 k rpm, SFC 1.02/1.85 lb/(lbf·h) |
 | Fuel | 72 L Jet-A1 (~58 kg), conformal self-sealing bladder, ~26 min hover / 4–7 hr climb-glide |
-| Wings | 3.5 m span, 22 ft² (2.0 m²), 12:1 glide, compact turbine-assisted, stows flat |
+| Wings | 3.5 m span, 22 ft² (2.0 m²), 12:1 glide, deployable wingsuit membrane (arm-to-body + leg-to-leg), stows flat |
 | Power | 1,200 Wh solid-state Li-S (550 Wh/kg) + piezo/solar harvesting |
 | Thermal | ±100 °C, 12 kW heat / 3 kW cool, skin held ~37 °C |
 | Flight envelope | 420 mph, 28,000 ft ceiling, 5.8 h hover, 200 ft jump |

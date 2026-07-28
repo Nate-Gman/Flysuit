@@ -6,14 +6,15 @@ suit**, a **space suit**, and a **dive suit**. Every dimension is real (mm / SI)
 and every subsystem is driven by math and physics, not scripted constants.
 
 > One-size-fits-all telescoping frame (fits a 3′3″–7′3″, 65–420 lb pilot) ·
-> 4-layer armor (7.5 mm total) · 48 micro-turbofan swarm turbines (Jet-A1 fuel,
-> SFC-modeled) · compact deployable gliding wings (3.5m, turbine-assisted) ·
-> vacuum-sealed helmet · neural BCI · dual-redundant real-time OS · buoyancy
-> control + decompression computer · radiation dosimetry + cold-gas RCS · ISA
-> atmosphere.
+> 4-layer sealed armor (7.5 mm total) with smooth elliptical shell, flush panel
+> lines, and contour detail · 48 micro-turbofan swarm turbines (Jet-A1 fuel,
+> SFC-modeled) · deployable wingsuit membrane (3.5m, turbine-assisted glide) ·
+> vacuum-sealed helmet with wraparound visor · neural BCI · dual-redundant
+> real-time OS · buoyancy control + decompression computer · radiation dosimetry
+> + cold-gas RCS · ISA atmosphere.
 
-The simulator lives in [flysuit.py](flysuit.py) (~10,800 lines) with component
-showcases in [showcase.py](showcase.py) (~1,500 lines). Design intent is in
+The simulator lives in [flysuit.py](flysuit.py) (~10,850 lines) with component
+showcases in [showcase.py](showcase.py) (~1,370 lines). Design intent is in
 [Projectgoal.md](Projectgoal.md) and [officialgoal.md](officialgoal.md). For the
 architecture and the engineering model, see [overview.md](overview.md).
 
@@ -115,7 +116,7 @@ self-test assertion for it.
 
 | Path | Purpose |
 |---|---|
-| `flysuit.py` | The entire simulator (~10,800 lines: specs, systems, physics, renderer, tests) |
+| `flysuit.py` | The entire simulator (~10,850 lines: specs, systems, physics, renderer, tests) |
 | `showcase.py` | 15 detailed component showcases with 3D meshes, math proof, and true-scale specs |
 | `overview.md` | Architecture + engineering model deep-dive |
 | `Projectgoal.md` / `officialgoal.md` | Original design brief and goals |
