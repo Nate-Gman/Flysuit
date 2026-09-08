@@ -5,18 +5,28 @@ Mjalnor'MV1.17 hybrid exoskeleton — one suit that operates as a **combat fligh
 suit**, a **space suit**, and a **dive suit**. Every dimension is real (mm / SI)
 and every subsystem is driven by math and physics, not scripted constants.
 
-> One-size-fits-all telescoping frame (fits a 3′3″–7′3″, 65–420 lb pilot) ·
-> 4-layer sealed armor (7.5 mm total) with smooth elliptical shell, flush panel
-> lines, and contour detail · 48 micro-turbofan swarm turbines (Jet-A1 fuel,
-> SFC-modeled) · deployable wingsuit membrane (3.5m, turbine-assisted glide) ·
-> vacuum-sealed helmet with wraparound visor · neural BCI · dual-redundant
-> real-time OS · buoyancy control + decompression computer · radiation dosimetry
-> + cold-gas RCS · ISA atmosphere.
+> One-size-fits-all telescoping frame (fits a 3′3″–7′3″, 65–420 lb pilot; the
+> suit mesh itself conforms to the pilot — no tailoring) · 4-layer sealed armor
+> (7.5 mm total) with smooth elliptical shell, flush panel lines, and contour
+> detail · 72 micro-turbofan swarm turbines (25 mm dia, 14 lbf dry / 23 lbf AB,
+> 300 k rpm, Jet-A1 fuel, SFC-modeled, bayonet-swap cartridges, iris-sealed for
+> vacuum/underwater, flush-mounted within 1-inch profile) · 6 plasma thruster discs
+> (25 mm dia, 2 palm + 2 heel + 2 backpack, D-He3 fusion-powered: air MHD ion-drag,
+> space magnetic-sail, vacuum fusion-water jet, ~84 yr pellet endurance) · Archangel
+> glide membrane — a compact gliding suit that is PART OF THE SUIT (3.5 m
+> deployed span, arm-to-body + leg-to-leg membranes, cape-fold stow; turbines
+> pulse to climb, the membrane glides) · vacuum-sealed helmet with wraparound
+> visor + fusion-powered closed-loop life support (Sabatier + electrolysis,
+> indefinite endurance; 24 h backup O₂/LiOH) · neural BCI · dual-redundant
+> real-time OS · buoyancy control + decompression computer · radiation
+> dosimetry + cold-gas RCS · ISA atmosphere.
 
-The simulator lives in [flysuit.py](flysuit.py) (~10,850 lines) with component
-showcases in [showcase.py](showcase.py) (~1,370 lines). Design intent is in
-[Projectgoal.md](Projectgoal.md) and [officialgoal.md](officialgoal.md). For the
-architecture and the engineering model, see [overview.md](overview.md).
+The simulator is a complete **single-file build** in [flysuit.py](flysuit.py)
+(~15,300 lines) — the 16 component showcases are integrated directly into it.
+[showcase.py](showcase.py) remains only as a compatibility re-export shim for
+older imports. Design intent is in [Projectgoal.md](Projectgoal.md) and
+[officialgoal.md](officialgoal.md). For the architecture and the engineering
+model, see [overview.md](overview.md).
 
 ---
 
@@ -56,11 +66,12 @@ instructions · `I` info · `P` pause · `O` export OBJ · `ESC` quit.
 **MODEL** — mouse orbit · wheel zoom · right-drag pan · `1`/`2`/`3` full /
 exploded / assembly · `L` labels · `E` explode · `X` section cut · `,` `.`
 isolate parts · `U` part browser · `B` blueprint · `0` suit overview · `S`
-showcase (15 detailed component views with math proof) · `[` `]` cycle showcase.
+showcase (16 detailed component views with math proof) · `[` `]` cycle showcase.
 
 **FLIGHT** — `UP`/`DOWN` throttle · `SPACE` max + afterburner · `C` cut ·
 `W/S/A/D/Q/E` vector thrust · `Z` altitude-hold · `V` hover · `B` auto-hover ·
-`N` auto-level · `6` deploy/stow wings · `[` `]` change environment · `R`
+`N` auto-level · `Y` **pulse-glide autopilot** (turbine pulse climb → membrane
+glide cycle) · `6` deploy/stow glide membrane · `[` `]` change environment · `R`
 respawn. Gamepad supported.
 
 **LAYERS** — `1`–`4` toggle the four armor layers · `E` explode · `[` `]` focus.
@@ -100,7 +111,9 @@ self-test assertion for it.
 
 | Domain | Equation / Model |
 |---|---|
-| Turbine thrust | Scales with air density ratio (ρ/ρ₀); zero in vacuum → RCS cold-gas |
+| Turbine thrust | Scales with air density ratio (ρ/ρ₀); iris-sealed in vacuum/underwater → plasma + RCS |
+| Plasma thrusters | 6 discs (2 palm gimbaled + 2 heel fixed + 2 backpack vectored); air: MHD ion-drag; vacuum: fusion-water jet (Isp ~2550 s); space: magnetic sail |
+| Fusion power | D-He3 aneutronic, 12 kW continuous, sponge-lattice core, ~1.8 g/yr pellet burn, ~84 yr total endurance (primary + backup) |
 | Fuel consumption | SFC × thrust → kg/s burn rate; total mass decreases as fuel depletes |
 | Wing lift | L = ½ρv²S·CL(α), linear to stall, flat-plate post-stall |
 | Induced drag | CDi = CL²/(π·AR·e), Oswald e=0.85, aspect ratio from span²/area |
@@ -116,8 +129,8 @@ self-test assertion for it.
 
 | Path | Purpose |
 |---|---|
-| `flysuit.py` | The entire simulator (~10,850 lines: specs, systems, physics, renderer, tests) |
-| `showcase.py` | 15 detailed component showcases with 3D meshes, math proof, and true-scale specs |
+| `flysuit.py` | The entire simulator (~15,300 lines: specs, systems, physics, renderer, tests, showcases) |
+| `showcase.py` | Compatibility shim — re-exports the showcase builders integrated in `flysuit.py` |
 | `overview.md` | Architecture + engineering model deep-dive |
 | `Projectgoal.md` / `officialgoal.md` | Original design brief and goals |
 | `flysuit.obj` / `flysuit.mtl` | Exported 3D model (regenerate with `--export-obj`) |
