@@ -6,23 +6,40 @@ suit**, a **space suit**, and a **dive suit**. Every dimension is real (mm / SI)
 and every subsystem is driven by math and physics, not scripted constants.
 
 > One-size-fits-all telescoping frame (fits a 3′3″–7′3″, 65–420 lb pilot; the
-> suit mesh itself conforms to the pilot — no tailoring) · 4-layer sealed armor
-> (7.5 mm total) with smooth elliptical shell, flush panel lines, and contour
-> detail · 72 micro-turbofan swarm turbines (25 mm dia, 14 lbf dry / 23 lbf AB,
-> 300 k rpm, Jet-A1 fuel, SFC-modeled, bayonet-swap cartridges, iris-sealed for
-> vacuum/underwater, flush-mounted within 1-inch profile) · 6 plasma thruster discs
-> (25 mm dia, 2 palm + 2 heel + 2 backpack, D-He3 fusion-powered: air MHD ion-drag,
-> space magnetic-sail, vacuum fusion-water jet, ~84 yr pellet endurance) · Archangel
+> suit mesh itself conforms to the pilot — no tailoring) · **100% scale:**
+> the model's crown-to-ground span equals the pilot height exactly at any
+> size, and the assembled suit adds only ~24 mm of helmet-dome + boot-sole
+> clearance — verified by self-test · 4-layer sealed armor
+> (7.5 mm total) in **accumulative stacking** — each layer sits exactly its
+> thickness above the body; outer shell stands ~7 mm proud, verified by
+> self-test · conformal-wrapped chest/back/ab plates on a smooth elliptical
+> shell, flush panel lines, contour detail · 72 flush RMF plasma-clutch pods (25 mm dia coil discs — 30
+> backpack + 12 forearm + 12 calf + 12 thigh + 6 collar ring — bayonet-swap
+> cartridges, iris-sealed in vacuum/underwater, flush-mounted within 1-inch
+> profile) whose ~9.4× lobes merge into one ~1 m coupling region · 6 steering
+> discs (2 palm gimbaled + 2 heel fixed + 2 backpack vectored) · D-He3 fusion
+> reactor 55 kW (~85 yr pellet endurance) drives every regime: air MHD
+> ion-drag, Titan/Mars gas (no O₂ needed), underwater ducted waterjets,
+> vacuum water plasma jet (Isp ~2550 s), solar-wind magnetic sail · Archangel
 > glide membrane — a compact gliding suit that is PART OF THE SUIT (3.5 m
-> deployed span, arm-to-body + leg-to-leg membranes, cape-fold stow; turbines
-> pulse to climb, the membrane glides) · vacuum-sealed helmet with wraparound
+> deployed span, arm-to-body + leg-to-leg membranes, cape-fold stow; clutch
+> pulses to climb, the membrane glides) · vacuum-sealed helmet with wraparound
 > visor + fusion-powered closed-loop life support (Sabatier + electrolysis,
 > indefinite endurance; 24 h backup O₂/LiOH) · neural BCI · dual-redundant
 > real-time OS · buoyancy control + decompression computer · radiation
-> dosimetry + cold-gas RCS · ISA atmosphere.
+> dosimetry + RMF magnetic shielding · three-tier meteoroid defense (plasma
+> sheath ≤300 J, energy-shield sentry ≤50 kJ, self-healing Whipple bumper) ·
+> directed-energy defense: 92%-reflective ceramic face + ablation vs lasers,
+> RMF shunt ≤120 kJ + capacitor vs plasma bolts, 700 kPa blast attenuation —
+> and Argent-drain: absorbed energy recharges the capacitor and battery ·
+> cold-gas RCS with water-steam fallback · ISA atmosphere · **field-serviceable
+> architecture**: per-pod health degrades gracefully (−1.4% thrust per lost
+> pod, never a drive failure), 8-min bayonet LRU swaps, 8-unit maintenance
+> prognostics with next-service forecast, and signed A/B firmware updates on
+> the dual-redundant OS for decades of upgrades.
 
 The simulator is a complete **single-file build** in [flysuit.py](flysuit.py)
-(~15,300 lines) — the 16 component showcases are integrated directly into it.
+(~17,400 lines) — the 16 component showcases are integrated directly into it.
 [showcase.py](showcase.py) remains only as a compatibility re-export shim for
 older imports. Design intent is in [Projectgoal.md](Projectgoal.md) and
 [officialgoal.md](officialgoal.md). For the architecture and the engineering
@@ -54,7 +71,8 @@ the headless report/test modes below run without it.
 | `python flysuit.py --layers` | Start in the layer-by-layer exploded view |
 
 Extra flags: `--detail <mult>` (mesh density), `--pilot-height <m>`,
-`--pilot-weight <kg>` (auto-sizes the telescoping frame).
+`--pilot-weight <kg>` — auto-sizes the telescoping frame; inputs are clamped to
+the rated fit envelope (0.99–2.21 m, 29.5–190.5 kg).
 
 ---
 
@@ -69,8 +87,8 @@ isolate parts · `U` part browser · `B` blueprint · `0` suit overview · `S`
 showcase (16 detailed component views with math proof) · `[` `]` cycle showcase.
 
 **FLIGHT** — `UP`/`DOWN` throttle · `SPACE` max + afterburner · `C` cut ·
-`W/S/A/D/Q/E` vector thrust · `Z` altitude-hold · `V` hover · `B` auto-hover ·
-`N` auto-level · `Y` **pulse-glide autopilot** (turbine pulse climb → membrane
+`W/S` pitch · `A/D` roll · `←/→` yaw · `I/J/K/L` thrust vector · `Z` altitude-hold · `V` hover · `B` auto-hover ·
+`N` auto-level · `Y` **pulse-glide autopilot** (clutch pulse climb → membrane
 glide cycle) · `6` deploy/stow glide membrane · `[` `]` change environment · `R`
 respawn. Gamepad supported.
 
@@ -111,10 +129,11 @@ self-test assertion for it.
 
 | Domain | Equation / Model |
 |---|---|
-| Turbine thrust | Scales with air density ratio (ρ/ρ₀); iris-sealed in vacuum/underwater → plasma + RCS |
-| Plasma thrusters | 6 discs (2 palm gimbaled + 2 heel fixed + 2 backpack vectored); air: MHD ion-drag; vacuum: fusion-water jet (Isp ~2550 s); space: magnetic sail |
-| Fusion power | D-He3 aneutronic, 12 kW continuous, sponge-lattice core, ~1.8 g/yr pellet burn, ~84 yr total endurance (primary + backup) |
-| Fuel consumption | SFC × thrust → kg/s burn rate; total mass decreases as fuel depletes |
+| Plasma clutch (air) | Merged ~1 m coupling region; F = (2ρAP²)^⅓·coupling·k_seed actuator-disk + real plasma diagnostics (ω_p, v_A, λ_D, Rm, β); works on any gas — no O₂ needed (Mars/Titan OK) |
+| Plasma clutch (water) | Pods sealed; 6 steering discs run ducted waterjets on ambient water — power-limited momentum flux + cavitation derate |
+| Plasma clutch (space) | Vacuum: water plasma jet (F = 2ηP/v_exh, Isp ~2550 s, 4.9 km/s Δv on 22 kg H₂O); ambient plasma: frozen-in magnetic sail; solar wind boost + ISM braking legs |
+| Fusion power | D-He3 aneutronic, 55 kW continuous, sponge-lattice core, ~85 yr pellet endurance (primary + backup) |
+| Water reaction mass | Drawn only by the vacuum jet (2 kg suit tank → 20 L reserve bladder); total mass decreases as it depletes |
 | Wing lift | L = ½ρv²S·CL(α), linear to stall, flat-plate post-stall |
 | Induced drag | CDi = CL²/(π·AR·e), Oswald e=0.85, aspect ratio from span²/area |
 | Parasitic drag | D = ½ρv²·Cd·A, environment-specific coefficients |
@@ -129,7 +148,7 @@ self-test assertion for it.
 
 | Path | Purpose |
 |---|---|
-| `flysuit.py` | The entire simulator (~15,300 lines: specs, systems, physics, renderer, tests, showcases) |
+| `flysuit.py` | The entire simulator (~17,400 lines: specs, systems, physics, renderer, tests, showcases) |
 | `showcase.py` | Compatibility shim — re-exports the showcase builders integrated in `flysuit.py` |
 | `overview.md` | Architecture + engineering model deep-dive |
 | `Projectgoal.md` / `officialgoal.md` | Original design brief and goals |
